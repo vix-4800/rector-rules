@@ -51,7 +51,7 @@ final class ReplaceMultipleEqualWithInArrayRector extends AbstractRector
                     'if ($var === \'a\' || $var === \'b\' || $var === \'c\') {
                         return true;
                     }',
-                                        'if (in_array($var, [\'a\', \'b\', \'c\'], true)) {
+                    'if (in_array($var, [\'a\', \'b\', \'c\'], true)) {
                         return true;
                     }'
                 ),
@@ -62,12 +62,12 @@ final class ReplaceMultipleEqualWithInArrayRector extends AbstractRector
                     'if (in_array($status, [\'active\', \'pending\'])) {
                         // do something
                     }'
-                                    ),
-                                    new CodeSample(
-                                        'if ($direction !== \'top\' && $direction !== \'bottom\') {
+                ),
+                new CodeSample(
+                    'if ($direction !== \'top\' && $direction !== \'bottom\') {
                         return \'bottom\';
                     }',
-                                        'if (!in_array($direction, [\'top\', \'bottom\'], true)) {
+                    'if (!in_array($direction, [\'top\', \'bottom\'], true)) {
                         return \'bottom\';
                     }'
                 ),
@@ -167,6 +167,7 @@ final class ReplaceMultipleEqualWithInArrayRector extends AbstractRector
 
     /**
      * @param Equal|Identical|NotEqual|NotIdentical $comparison
+     * @param ?Expr                                 $knownSubject
      *
      * @return array{subject: Expr, value: Expr}|null
      */
@@ -231,6 +232,8 @@ final class ReplaceMultipleEqualWithInArrayRector extends AbstractRector
     }
 
     /**
+     * @param Node $node
+     *
      * @return list<Equal|Identical>|null
      */
     private function collectOrComparisons(Node $node): ?array
@@ -254,6 +257,8 @@ final class ReplaceMultipleEqualWithInArrayRector extends AbstractRector
     }
 
     /**
+     * @param Node $node
+     *
      * @return list<NotEqual|NotIdentical>|null
      */
     private function collectAndComparisons(Node $node): ?array
@@ -270,7 +275,7 @@ final class ReplaceMultipleEqualWithInArrayRector extends AbstractRector
                 return null;
             }
 
-                return [...$leftComparisons, ...$rightComparisons];
+            return [...$leftComparisons, ...$rightComparisons];
         }
 
         return null;

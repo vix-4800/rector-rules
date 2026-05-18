@@ -139,6 +139,9 @@ if ($obj) {
     }
 
     /**
+     * @param If_    $node
+     * @param Assign $assignment
+     *
      * @return list<Node>|null
      */
     private function handleAssignmentCondition(If_ $node, Assign $assignment): ?array
@@ -159,6 +162,9 @@ if ($obj) {
     }
 
     /**
+     * @param If_        $node
+     * @param BooleanAnd $booleanAnd
+     *
      * @return list<Node>|null
      */
     private function handleBooleanAndCondition(If_ $node, BooleanAnd $booleanAnd): ?array
@@ -185,6 +191,9 @@ if ($obj) {
     }
 
     /**
+     * @param If_      $node
+     * @param BinaryOp $binaryOp
+     *
      * @return list<Node>|null
      */
     private function handleBinaryOpCondition(If_ $node, BinaryOp $binaryOp): ?array
@@ -227,6 +236,9 @@ if ($obj) {
     }
 
     /**
+     * @param If_        $node
+     * @param BooleanNot $booleanNot
+     *
      * @return list<Node>|null
      */
     private function handleBooleanNotCondition(If_ $node, BooleanNot $booleanNot): ?array
@@ -278,6 +290,9 @@ if ($obj) {
     }
 
     /**
+     * @param If_      $node
+     * @param FuncCall $funcCall
+     *
      * @return list<Node>|null
      */
     private function handleFuncCallCondition(If_ $node, FuncCall $funcCall): ?array
@@ -325,6 +340,9 @@ if ($obj) {
     }
 
     /**
+     * @param Node $condition
+     * @param If_  $node
+     *
      * @return array{statements: list<Expression>, if: If_}|null
      */
     private function extractAssignmentFromCondition(Node $condition, If_ $node): ?array

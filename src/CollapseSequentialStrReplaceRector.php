@@ -88,7 +88,7 @@ final class CollapseSequentialStrReplaceRector extends AbstractRector
     }
 
     /**
-     * @param array<Stmt> $statements
+     * @param list<Stmt> $statements
      */
     private function refactorStatementList(array &$statements): bool
     {
@@ -144,6 +144,8 @@ final class CollapseSequentialStrReplaceRector extends AbstractRector
 
     /**
      * Recurse into nested statement lists and apply the same collapse there.
+     *
+     * @param Stmt $statement
      */
     private function refactorNestedStatements(Stmt $statement): bool
     {
@@ -215,6 +217,7 @@ final class CollapseSequentialStrReplaceRector extends AbstractRector
 
     /**
      * @param list<Stmt> $statements
+     * @param int        $returnIndex
      *
      * @return array{return: Return_, start_index: int}|null
      */
@@ -278,6 +281,10 @@ final class CollapseSequentialStrReplaceRector extends AbstractRector
     }
 
     /**
+     * @param Stmt   $statement
+     * @param string $variableName
+     * @param Expr   $replacement
+     *
      * @return array{searches: list<String_>, subject: Expr}|null
      */
     private function matchAssignedVariableStrReplace(Stmt $statement, string $variableName, Expr $replacement): ?array
@@ -309,6 +316,8 @@ final class CollapseSequentialStrReplaceRector extends AbstractRector
     }
 
     /**
+     * @param FuncCall $funcCall
+     *
      * @return array{replacement: Expr, searches: list<String_>, subject: Expr}|null
      */
     private function matchStrReplaceCall(FuncCall $funcCall): ?array
@@ -358,6 +367,8 @@ final class CollapseSequentialStrReplaceRector extends AbstractRector
      * Build the collapsed return statement.
      *
      * @param list<String_> $searches
+     * @param Expr          $replacement
+     * @param Expr          $subject
      */
     private function createCollapsedReturn(array $searches, Expr $replacement, Expr $subject): Return_
     {
@@ -385,6 +396,8 @@ final class CollapseSequentialStrReplaceRector extends AbstractRector
     }
 
     /**
+     * @param Expr $search
+     *
      * @return list<String_>
      */
     private function extractSearchStrings(Expr $search): array
@@ -412,6 +425,8 @@ final class CollapseSequentialStrReplaceRector extends AbstractRector
 
     /**
      * Resolve a plain variable name and skip dynamic variables.
+     *
+     * @param Variable $variable
      */
     private function getVariableName(Variable $variable): ?string
     {

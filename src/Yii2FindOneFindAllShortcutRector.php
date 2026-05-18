@@ -109,6 +109,8 @@ final class Yii2FindOneFindAllShortcutRector extends AbstractRector
     }
 
     /**
+     * @param MethodCall $whereCall
+     *
      * @return list<Arg>
      */
     private function resolveShortcutArgs(MethodCall $whereCall): array
@@ -139,6 +141,8 @@ final class Yii2FindOneFindAllShortcutRector extends AbstractRector
     }
 
     /**
+     * @param Array_ $array
+     *
      * @return Arg|null
      */
     private function resolveSingleIdArg(Array_ $array): ?Arg
@@ -157,7 +161,7 @@ final class Yii2FindOneFindAllShortcutRector extends AbstractRector
     }
 
     /**
-     * @param array<Arg|VariadicPlaceholder> $args
+     * @param list<Arg|VariadicPlaceholder> $args
      *
      * @return list<Arg>
      */
@@ -166,7 +170,7 @@ final class Yii2FindOneFindAllShortcutRector extends AbstractRector
         $filteredArgs = [];
 
         foreach ($args as $arg) {
-            if (!($arg instanceof Arg)) {
+            if (!$arg instanceof Arg) {
                 continue;
             }
 

@@ -150,7 +150,7 @@ final class NullableBoolReturnToFalseRector extends AbstractRector
                     $nestedStatements = [];
 
                     foreach ($sub as $nestedNode) {
-                        if (!($nestedNode instanceof Stmt)) {
+                        if (!$nestedNode instanceof Stmt) {
                             continue;
                         }
 
