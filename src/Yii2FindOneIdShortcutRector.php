@@ -7,10 +7,10 @@ namespace Vix\RectorRules;
 use PhpParser\Node;
 use PhpParser\Node\Arg;
 use PhpParser\Node\Expr\Array_;
-use PhpParser\Node\Expr\ArrayItem;
 use PhpParser\Node\Expr\StaticCall;
 use PhpParser\Node\Identifier;
 use PhpParser\Node\Scalar\String_;
+use PhpParser\Node\VariadicPlaceholder;
 use Rector\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 
@@ -61,14 +61,17 @@ final class Yii2FindOneIdShortcutRector extends AbstractRector
             return null;
         }
 
-        if (
-            count($node->args) !== 1
-            || !$node->args[0]->value instanceof Array_
-        ) {
+        if (count($node->args) !== 1) {
             return null;
         }
 
-        $array = $node->args[0]->value;
+        $firstArg = $node->args[0];
+
+        if ($firstArg instanceof VariadicPlaceholder || !$firstArg->value instanceof Array_) {
+            return null;
+        }
+
+        $array = $firstArg->value;
 
         if (count($array->items) !== 1) {
             return null;
@@ -76,7 +79,7 @@ final class Yii2FindOneIdShortcutRector extends AbstractRector
 
         $item = $array->items[0];
 
-        if (!$item instanceof ArrayItem || !$item->key instanceof String_ || $item->key->value !== 'id') {
+        if (!$item->key instanceof String_ || $item->key->value !== 'id') {
             return null;
         }
 

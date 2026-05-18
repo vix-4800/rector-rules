@@ -51,10 +51,6 @@ final class Yii2PropertyAccessRector extends AbstractRector
      */
     public function refactor(Node $node): ?Node
     {
-        if (!$node instanceof MethodCall) {
-            return null;
-        }
-
         if (!$this->isName($node->name, 'getId') && !$this->isName($node->name, 'getIdentity')) {
             return null;
         }

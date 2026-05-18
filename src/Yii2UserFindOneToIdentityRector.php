@@ -92,7 +92,7 @@ final class Yii2UserFindOneToIdentityRector extends AbstractRector
         if ($expr instanceof Array_ && count($expr->items) === 1) {
             $item = $expr->items[0];
 
-            if ($item && $item->value && $this->isYiiUserIdPropertyFetch($item->value)) {
+            if ($this->isYiiUserIdPropertyFetch($item->value)) {
                 return true;
             }
         }

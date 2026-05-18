@@ -102,7 +102,7 @@ final class Yii2UseExistsInsteadOfCountRector extends AbstractRector
             $numberValue = $node->left;
         }
 
-        if ($methodCall === null || $numberValue === null) {
+        if (!$methodCall instanceof MethodCall || !$numberValue instanceof LNumber) {
             return null;
         }
 
