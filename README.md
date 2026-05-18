@@ -35,15 +35,4 @@ return RectorConfig::configure()
 
 ## Rules
 
-- `Vix\RectorRules\AddTypedClassConstantRector`
-- `Vix\RectorRules\CollapseSequentialStrReplaceRector`
-- `Vix\RectorRules\ExtractAssignmentFromIfConditionRector`
-- `Vix\RectorRules\NullableBoolReturnToFalseRector`
-- `Vix\RectorRules\ReplaceMultipleEqualWithInArrayRector`
-- `Vix\RectorRules\Yii2FindAllIdShortcutRector`
-- `Vix\RectorRules\Yii2FindOneFindAllShortcutRector`
-- `Vix\RectorRules\Yii2FindOneIdShortcutRector`
-- `Vix\RectorRules\Yii2PropertyAccessRector`
-- `Vix\RectorRules\Yii2UseExistsInsteadOfCountRector`
-- `Vix\RectorRules\Yii2UseExistsInsteadOfOneNotNullRector`
-- `Vix\RectorRules\Yii2UserFindOneToIdentityRector`
+See [docs/RULES.md](docs/RULES.md) for detailed descriptions, before/after examples, and configuration notes for every rule in this package.
