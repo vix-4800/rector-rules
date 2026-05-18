@@ -91,10 +91,12 @@ final class Yii2UseExistsInsteadOfCountRector extends AbstractRector
     {
         $methodCall = null;
         $numberValue = null;
+        $isMethodCallOnLeft = false;
 
         if ($this->isMethodCallCount($node->left) && $this->isNumber($node->right)) {
             $methodCall = $node->left;
             $numberValue = $node->right;
+            $isMethodCallOnLeft = true;
         } elseif ($this->isNumber($node->left) && $this->isMethodCallCount($node->right)) {
             $methodCall = $node->right;
             $numberValue = $node->left;
@@ -105,7 +107,7 @@ final class Yii2UseExistsInsteadOfCountRector extends AbstractRector
         }
 
         $number = $numberValue->value;
-        $shouldNegate = $this->shouldNegateExists($node, $number);
+        $shouldNegate = $this->shouldNegateExists($node, $number, $isMethodCallOnLeft);
 
         if ($shouldNegate === null) {
             return null;
@@ -151,12 +153,25 @@ final class Yii2UseExistsInsteadOfCountRector extends AbstractRector
      * Determine if exists() should be negated
      *
      * @param Equal|Greater|GreaterOrEqual|Identical|NotEqual|NotIdentical|Smaller|SmallerOrEqual $node   Comparison node
-     * @param int                                                                                 $number Number compared
+     * @param int                                                                                 $number             Number compared
+     * @param bool                                                                                $isMethodCallOnLeft Whether count() is on the left side
      *
      * @return bool|null True if should negate, false if not, null if pattern doesn't match
      */
-    private function shouldNegateExists(Node $node, int $number): ?bool
+    private function shouldNegateExists(Node $node, int $number, bool $isMethodCallOnLeft): ?bool
     {
+        if (!$isMethodCallOnLeft) {
+            return match (true) {
+                $node instanceof Smaller && $number === 0 => false,
+                $node instanceof SmallerOrEqual && $number === 1 => false,
+                $node instanceof Greater && $number === 1 => true,
+                $node instanceof GreaterOrEqual && $number === 0 => true,
+                ($node instanceof NotEqual || $node instanceof NotIdentical) && $number === 0 => false,
+                ($node instanceof Equal || $node instanceof Identical) && $number === 0 => true,
+                default => null,
+            };
+        }
+
         return match (true) {
             $node instanceof Greater && $number === 0 => false,
             $node instanceof GreaterOrEqual && $number === 1 => false,
