@@ -1,6 +1,13 @@
 # Rules Reference
 
+Detailed documentation for every Rector rule shipped by this package.
+
+All current rules are parameterless. If a rule becomes configurable in the future, its parameters should be documented in its section.
+
+## Table of Contents
+
 - [Rules Reference](#rules-reference)
+  - [Table of Contents](#table-of-contents)
   - [AddTypedClassConstantRector](#addtypedclassconstantrector)
   - [CollapseSequentialStrReplaceRector](#collapsesequentialstrreplacerector)
   - [ExtractAssignmentFromIfConditionRector](#extractassignmentfromifconditionrector)
@@ -14,10 +21,6 @@
     - [Yii2UseExistsInsteadOfCountRector](#yii2useexistsinsteadofcountrector)
     - [Yii2UseExistsInsteadOfOneNotNullRector](#yii2useexistsinsteadofonenotnullrector)
     - [Yii2UserFindOneToIdentityRector](#yii2userfindonetoidentityrector)
-
-Detailed documentation for every Rector rule shipped by this package.
-
-All current rules are parameterless. If a rule becomes configurable in the future, its parameters should be documented in its section.
 
 ## AddTypedClassConstantRector
 
