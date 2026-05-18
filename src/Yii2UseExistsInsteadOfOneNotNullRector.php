@@ -60,10 +60,6 @@ final class Yii2UseExistsInsteadOfOneNotNullRector extends AbstractRector
      */
     public function refactor(Node $node): ?Node
     {
-        if (!$node instanceof Identical && !$node instanceof NotIdentical) {
-            return null;
-        }
-
         $methodCall = null;
         $nullValue = null;
 
@@ -75,7 +71,7 @@ final class Yii2UseExistsInsteadOfOneNotNullRector extends AbstractRector
             $nullValue = $node->left;
         }
 
-        if ($methodCall === null || $nullValue === null) {
+        if (!$methodCall instanceof MethodCall || !$nullValue instanceof ConstFetch) {
             return null;
         }
 
@@ -107,10 +103,6 @@ final class Yii2UseExistsInsteadOfOneNotNullRector extends AbstractRector
     private function isNull(Node $node): bool
     {
         if (!$node instanceof ConstFetch) {
-            return false;
-        }
-
-        if (!$node->name instanceof Name) {
             return false;
         }
 
