@@ -1,0 +1,48 @@
+{
+  "name": "vix/rector-rules",
+  "description": "Custom Rector rules for strict development standards",
+  "type": "library",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Anton Vix",
+      "email": "Gordan.eEi@protonmail.ch"
+    }
+  ],
+  "keywords": [
+    "dev",
+    "rector",
+    "refactoring",
+    "yii2",
+    "static-analysis",
+    "dev-tool",
+    "rules"
+  ],
+  "prefer-stable": true,
+  "require": {
+    "php": "^8.4",
+    "rector/rector": "^2.1"
+  },
+  "require-dev": {
+    "phpstan/phpstan": "^2.1.55",
+    "phpunit/phpunit": "^13.1.10"
+  },
+  "autoload": {
+    "psr-4": {
+      "Vix\\RectorRules\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Vix\\RectorRules\\Tests\\": "tests/"
+    }
+  },
+  "scripts": {
+    "test": "php -d memory_limit=1G vendor/bin/phpunit --colors=always",
+    "static-analysis": "vendor/bin/phpstan analyse --memory-limit=1G --debug",
+    "check": [
+      "@static-analysis",
+      "@test"
+    ]
+  }
+}
