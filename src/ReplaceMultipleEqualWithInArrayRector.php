@@ -6,8 +6,9 @@ namespace Vix\RectorRules;
 
 use PhpParser\Node;
 use PhpParser\Node\Arg;
+use PhpParser\Node\ArrayItem;
+use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\Array_;
-use PhpParser\Node\Expr\ArrayItem;
 use PhpParser\Node\Expr\BinaryOp\BooleanAnd;
 use PhpParser\Node\Expr\BinaryOp\BooleanOr;
 use PhpParser\Node\Expr\BinaryOp\Equal;
@@ -19,7 +20,7 @@ use PhpParser\Node\Expr\ConstFetch;
 use PhpParser\Node\Expr\FuncCall;
 use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Name;
-use PhpParser\Node\Scalar\LNumber;
+use PhpParser\Node\Scalar\Int_;
 use PhpParser\Node\Scalar\String_;
 use Rector\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
@@ -87,10 +88,6 @@ final class ReplaceMultipleEqualWithInArrayRector extends AbstractRector
      */
     public function refactor(Node $node): ?Node
     {
-        if (!$node instanceof BooleanOr && !$node instanceof BooleanAnd) {
-            return null;
-        }
-
         $comparisons = $this->collectComparisons($node);
 
         if (!is_array($comparisons)) {
@@ -109,21 +106,13 @@ final class ReplaceMultipleEqualWithInArrayRector extends AbstractRector
         $isMixed = false;
 
         foreach ($comparisons as $comparison) {
-            if ($comparison instanceof Identical || $comparison instanceof NotIdentical) {
-                if ($isStrict === false) {
-                    $isMixed = true;
-                }
+            $isCurrentStrict = $comparison instanceof Identical || $comparison instanceof NotIdentical;
 
-                $isStrict = true;
-            } elseif ($comparison instanceof Equal || $comparison instanceof NotEqual) {
-                if ($isStrict === true) {
-                    $isMixed = true;
-                }
-
-                $isStrict = false;
-            } else {
-                return null;
+            if ($isStrict !== null && $isStrict !== $isCurrentStrict) {
+                $isMixed = true;
             }
+
+            $isStrict = $isCurrentStrict;
         }
 
         if ($isMixed) {
@@ -179,9 +168,9 @@ final class ReplaceMultipleEqualWithInArrayRector extends AbstractRector
     /**
      * @param Equal|Identical|NotEqual|NotIdentical $comparison
      *
-     * @return array{subject: Node, value: Node}|null
+     * @return array{subject: Expr, value: Expr}|null
      */
-    private function resolveSubjectAndValue(Node $comparison, ?Node $knownSubject): ?array
+    private function resolveSubjectAndValue(Node $comparison, ?Expr $knownSubject): ?array
     {
         if ($knownSubject !== null) {
             if ($this->areNodesEqual($comparison->left, $knownSubject)) {
@@ -217,7 +206,7 @@ final class ReplaceMultipleEqualWithInArrayRector extends AbstractRector
     private function isLiteralValue(Node $node): bool
     {
         return $node instanceof ConstFetch
-            || $node instanceof LNumber
+            || $node instanceof Int_
             || $node instanceof String_;
     }
 
@@ -376,6 +365,6 @@ final class ReplaceMultipleEqualWithInArrayRector extends AbstractRector
             return true;
         }
 
-        return $value instanceof LNumber && $value->value === 0;
+        return $value instanceof Int_ && $value->value === 0;
     }
 }
