@@ -161,7 +161,7 @@ final class Yii2FindOneFindAllShortcutRector extends AbstractRector
     }
 
     /**
-     * @param list<Arg|VariadicPlaceholder> $args
+     * @param array<int|string, Arg|VariadicPlaceholder> $args
      *
      * @return list<Arg>
      */

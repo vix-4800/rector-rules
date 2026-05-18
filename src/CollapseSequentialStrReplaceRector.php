@@ -88,7 +88,7 @@ final class CollapseSequentialStrReplaceRector extends AbstractRector
     }
 
     /**
-     * @param list<Stmt> $statements
+     * @param array<int|string, Stmt> $statements
      */
     private function refactorStatementList(array &$statements): bool
     {
