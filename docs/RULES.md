@@ -6,13 +6,14 @@
   - [ExtractAssignmentFromIfConditionRector](#extractassignmentfromifconditionrector)
   - [NullableBoolReturnToFalseRector](#nullableboolreturntofalserector)
   - [ReplaceMultipleEqualWithInArrayRector](#replacemultipleequalwithinarrayrector)
-  - [Yii2FindAllIdShortcutRector](#yii2findallidshortcutrector)
-  - [Yii2FindOneFindAllShortcutRector](#yii2findonefindallshortcutrector)
-  - [Yii2FindOneIdShortcutRector](#yii2findoneidshortcutrector)
-  - [Yii2PropertyAccessRector](#yii2propertyaccessrector)
-  - [Yii2UseExistsInsteadOfCountRector](#yii2useexistsinsteadofcountrector)
-  - [Yii2UseExistsInsteadOfOneNotNullRector](#yii2useexistsinsteadofonenotnullrector)
-  - [Yii2UserFindOneToIdentityRector](#yii2userfindonetoidentityrector)
+  - [Yii2](#yii2)
+    - [Yii2FindAllIdShortcutRector](#yii2findallidshortcutrector)
+    - [Yii2FindOneFindAllShortcutRector](#yii2findonefindallshortcutrector)
+    - [Yii2FindOneIdShortcutRector](#yii2findoneidshortcutrector)
+    - [Yii2PropertyAccessRector](#yii2propertyaccessrector)
+    - [Yii2UseExistsInsteadOfCountRector](#yii2useexistsinsteadofcountrector)
+    - [Yii2UseExistsInsteadOfOneNotNullRector](#yii2useexistsinsteadofonenotnullrector)
+    - [Yii2UserFindOneToIdentityRector](#yii2userfindonetoidentityrector)
 
 Detailed documentation for every Rector rule shipped by this package.
 
@@ -157,7 +158,9 @@ if (in_array($status, ['new', 'active', 'done'], true)) {
 
 Parameters: none.
 
-## Yii2FindAllIdShortcutRector
+## Yii2
+
+### Yii2FindAllIdShortcutRector
 
 Simplifies Yii2 `findAll()` calls that wrap an ID condition in a one-element array. It only rewrites the exact `['id' => ...]` shortcut form.
 
@@ -175,7 +178,7 @@ $models = User::findAll($ids);
 
 Parameters: none.
 
-## Yii2FindOneFindAllShortcutRector
+### Yii2FindOneFindAllShortcutRector
 
 Converts `Model::find()->where(...)->one()` and `->all()` chains into `findOne()` and `findAll()` shortcuts. It preserves array conditions when needed and skips cases where extra chaining such as `limit()` could change behavior.
 
@@ -193,7 +196,7 @@ $model = User::findOne($id);
 
 Parameters: none.
 
-## Yii2FindOneIdShortcutRector
+### Yii2FindOneIdShortcutRector
 
 Simplifies Yii2 `findOne()` calls that use the array form for a single `id` lookup. Composite conditions and other keys are left unchanged.
 
@@ -211,7 +214,7 @@ $model = User::findOne($id);
 
 Parameters: none.
 
-## Yii2PropertyAccessRector
+### Yii2PropertyAccessRector
 
 Replaces Yii2 user getter calls with direct property access for the built-in `user` component. This currently targets `getId()` and `getIdentity()`.
 
@@ -231,7 +234,7 @@ $identity = Yii::$app->user->identity;
 
 Parameters: none.
 
-## Yii2UseExistsInsteadOfCountRector
+### Yii2UseExistsInsteadOfCountRector
 
 Replaces supported Yii2 `count()` comparisons with `exists()` or `!exists()` when the comparison only checks whether at least one row matches. This avoids unnecessary counting.
 
@@ -251,7 +254,7 @@ $hasNoUsers = !User::find()->where(['active' => 1])->exists();
 
 Parameters: none.
 
-## Yii2UseExistsInsteadOfOneNotNullRector
+### Yii2UseExistsInsteadOfOneNotNullRector
 
 Replaces strict `one() === null` and `one() !== null` checks with `exists()` or `!exists()`. Both direct and mirrored `null` comparisons are supported.
 
@@ -271,7 +274,7 @@ $missingUser = !User::find()->where(['id' => $id])->exists();
 
 Parameters: none.
 
-## Yii2UserFindOneToIdentityRector
+### Yii2UserFindOneToIdentityRector
 
 Replaces lookups for the currently authenticated Yii2 user with direct access to `Yii::$app->user->identity`. It supports both scalar and simple array `findOne()` forms on the `User` model.
 
