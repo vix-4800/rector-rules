@@ -7,11 +7,11 @@ namespace Vix\RectorRules;
 use PhpParser\Node;
 use PhpParser\Node\Arg;
 use PhpParser\Node\Expr\Array_;
-use PhpParser\Node\Expr\ArrayItem;
 use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Expr\StaticCall;
 use PhpParser\Node\Identifier;
 use PhpParser\Node\Scalar\String_;
+use PhpParser\Node\VariadicPlaceholder;
 use Rector\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
@@ -114,19 +114,25 @@ final class Yii2FindOneFindAllShortcutRector extends AbstractRector
     private function resolveShortcutArgs(MethodCall $whereCall): array
     {
         if (count($whereCall->args) !== 1) {
-            return $whereCall->args;
+            return $this->filterArgs($whereCall->args);
         }
 
-        $firstArg = $whereCall->args[0]->value;
+        $whereArg = $whereCall->args[0];
+
+        if ($whereArg instanceof VariadicPlaceholder) {
+            return [];
+        }
+
+        $firstArg = $whereArg->value;
 
         if (!$firstArg instanceof Array_) {
-            return $whereCall->args;
+            return [$whereArg];
         }
 
         $shortcutArg = $this->resolveSingleIdArg($firstArg);
 
         if (!$shortcutArg instanceof Arg) {
-            return $whereCall->args;
+            return [$whereArg];
         }
 
         return [$shortcutArg];
@@ -143,14 +149,28 @@ final class Yii2FindOneFindAllShortcutRector extends AbstractRector
 
         $item = $array->items[0];
 
-        if (!$item instanceof ArrayItem) {
-            return null;
-        }
-
         if (!$item->key instanceof String_ || $item->key->value !== 'id') {
             return null;
         }
 
         return new Arg($item->value);
+    }
+
+    /**
+     * @param array<Arg|VariadicPlaceholder> $args
+     *
+     * @return list<Arg>
+     */
+    private function filterArgs(array $args): array
+    {
+        $filteredArgs = [];
+
+        foreach ($args as $arg) {
+            if ($arg instanceof Arg) {
+                $filteredArgs[] = $arg;
+            }
+        }
+
+        return $filteredArgs;
     }
 }
