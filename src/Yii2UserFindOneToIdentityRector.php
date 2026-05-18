@@ -20,7 +20,7 @@ final class Yii2UserFindOneToIdentityRector extends AbstractRector
     {
         return new RuleDefinition(
             'Replaces User::findOne(Yii::$app->user->id) with Yii::$app->user->identity',
-            []
+            [],
         );
     }
 
@@ -105,9 +105,9 @@ final class Yii2UserFindOneToIdentityRector extends AbstractRector
         return new PropertyFetch(
             new PropertyFetch(
                 new StaticPropertyFetch(new Name('Yii'), 'app'),
-                'user'
+                'user',
             ),
-            'identity'
+            'identity',
         );
     }
 }

@@ -11,7 +11,6 @@ use PhpParser\Node\Expr\BooleanNot;
 use PhpParser\Node\Expr\ConstFetch;
 use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Identifier;
-use PhpParser\Node\Name;
 use Rector\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
@@ -33,7 +32,7 @@ final class Yii2UseExistsInsteadOfOneNotNullRector extends AbstractRector
 }',
                     'if (Model::find()->where([\'id\' => $id])->exists()) {
     return true;
-}'
+}',
                 ),
                 new CodeSample(
                     'if (Model::find()->where([\'id\' => $id])->one() === null) {
@@ -41,9 +40,9 @@ final class Yii2UseExistsInsteadOfOneNotNullRector extends AbstractRector
 }',
                     'if (!Model::find()->where([\'id\' => $id])->exists()) {
     return false;
-}'
+}',
                 ),
-            ]
+            ],
         );
     }
 
@@ -77,7 +76,7 @@ final class Yii2UseExistsInsteadOfOneNotNullRector extends AbstractRector
 
         $existsCall = new MethodCall(
             $methodCall->var,
-            new Identifier('exists')
+            new Identifier('exists'),
         );
 
         if ($node instanceof NotIdentical) {

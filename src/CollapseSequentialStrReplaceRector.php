@@ -17,9 +17,16 @@ use PhpParser\Node\Name;
 use PhpParser\Node\Scalar\String_;
 use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\ClassMethod;
+use PhpParser\Node\Stmt\Do_;
 use PhpParser\Node\Stmt\Expression;
+use PhpParser\Node\Stmt\For_;
+use PhpParser\Node\Stmt\Foreach_;
 use PhpParser\Node\Stmt\Function_;
+use PhpParser\Node\Stmt\If_;
 use PhpParser\Node\Stmt\Return_;
+use PhpParser\Node\Stmt\Switch_;
+use PhpParser\Node\Stmt\TryCatch;
+use PhpParser\Node\Stmt\While_;
 use Rector\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
@@ -47,9 +54,9 @@ final class CollapseSequentialStrReplaceRector extends AbstractRector
                         PHP,
                     <<<'PHP'
                         return str_replace(['+', ' ', '(', ')', '-'], '', $number);
-                        PHP
+                        PHP,
                 ),
-            ]
+            ],
         );
     }
 
@@ -66,7 +73,7 @@ final class CollapseSequentialStrReplaceRector extends AbstractRector
      */
     public function refactor(Node $node): ?Node
     {
-        if ($node->stmts === null || $node->stmts === []) {
+        if (in_array($node->stmts, [null, []], true)) {
             return null;
         }
 
@@ -142,15 +149,17 @@ final class CollapseSequentialStrReplaceRector extends AbstractRector
     {
         $hasChanged = false;
 
-        if ($statement instanceof Stmt\If_) {
+        if ($statement instanceof If_) {
             if ($this->refactorStatementList($statement->stmts)) {
                 $hasChanged = true;
             }
 
             foreach ($statement->elseifs as $elseif) {
-                if ($this->refactorStatementList($elseif->stmts)) {
-                    $hasChanged = true;
+                if (!$this->refactorStatementList($elseif->stmts)) {
+                    continue;
                 }
+
+                $hasChanged = true;
             }
 
             if ($statement->else !== null && $this->refactorStatementList($statement->else->stmts)) {
@@ -159,25 +168,23 @@ final class CollapseSequentialStrReplaceRector extends AbstractRector
         }
 
         if (
-            $statement instanceof Stmt\For_
-            || $statement instanceof Stmt\Foreach_
-            || $statement instanceof Stmt\While_
-            || $statement instanceof Stmt\Do_
+            ($statement instanceof For_ || $statement instanceof Foreach_ || $statement instanceof While_ || $statement instanceof Do_)
+            && $this->refactorStatementList($statement->stmts)
         ) {
-            if ($this->refactorStatementList($statement->stmts)) {
-                $hasChanged = true;
-            }
+            $hasChanged = true;
         }
 
-        if ($statement instanceof Stmt\TryCatch) {
+        if ($statement instanceof TryCatch) {
             foreach ($statement->catches as $catch) {
                 if ($catch->stmts === []) {
                     continue;
                 }
 
-                if ($this->refactorStatementList($catch->stmts)) {
-                    $hasChanged = true;
+                if (!$this->refactorStatementList($catch->stmts)) {
+                    continue;
                 }
+
+                $hasChanged = true;
             }
 
             if (
@@ -189,15 +196,17 @@ final class CollapseSequentialStrReplaceRector extends AbstractRector
             }
         }
 
-        if ($statement instanceof Stmt\Switch_) {
+        if ($statement instanceof Switch_) {
             foreach ($statement->cases as $case) {
                 if ($case->stmts === []) {
                     continue;
                 }
 
-                if ($this->refactorStatementList($case->stmts)) {
-                    $hasChanged = true;
+                if (!$this->refactorStatementList($case->stmts)) {
+                    continue;
                 }
+
+                $hasChanged = true;
             }
         }
 
@@ -359,8 +368,8 @@ final class CollapseSequentialStrReplaceRector extends AbstractRector
                     new Arg($this->createSearchArray($searches)),
                     new Arg($replacement),
                     new Arg($subject),
-                ]
-            )
+                ],
+            ),
         );
     }
 
@@ -370,8 +379,8 @@ final class CollapseSequentialStrReplaceRector extends AbstractRector
     private function createSearchArray(array $searches): Array_
     {
         return new Array_(array_map(
-            static fn (String_ $search): ArrayItem => new ArrayItem($search),
-            $searches
+            static fn(String_ $search): ArrayItem => new ArrayItem($search),
+            $searches,
         ));
     }
 

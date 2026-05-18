@@ -28,13 +28,13 @@ final class Yii2PropertyAccessRector extends AbstractRector
             [
                 new CodeSample(
                     'Yii::$app->user->getId()',
-                    'Yii::$app->user->id'
+                    'Yii::$app->user->id',
                 ),
                 new CodeSample(
                     'Yii::$app->user->getIdentity()',
-                    'Yii::$app->user->identity'
+                    'Yii::$app->user->identity',
                 ),
-            ]
+            ],
         );
     }
 

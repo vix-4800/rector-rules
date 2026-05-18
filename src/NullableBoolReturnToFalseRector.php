@@ -46,9 +46,9 @@ final class NullableBoolReturnToFalseRector extends AbstractRector
 
                             return true;
                         }
-                        PHP
+                        PHP,
                 ),
-            ]
+            ],
         );
     }
 
@@ -150,9 +150,11 @@ final class NullableBoolReturnToFalseRector extends AbstractRector
                     $nestedStatements = [];
 
                     foreach ($sub as $nestedNode) {
-                        if ($nestedNode instanceof Stmt) {
-                            $nestedStatements[] = $nestedNode;
+                        if (!($nestedNode instanceof Stmt)) {
+                            continue;
                         }
+
+                        $nestedStatements[] = $nestedNode;
                     }
 
                     if ($nestedStatements !== []) {

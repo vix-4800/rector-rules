@@ -49,7 +49,7 @@ final class Yii2UseExistsInsteadOfCountRector extends AbstractRector
 }',
                     'if (Model::find()->where([\'id\' => $id])->exists()) {
     return true;
-}'
+}',
                 ),
                 new CodeSample(
                     'if (Model::find()->where([\'id\' => $id])->count() === 0) {
@@ -57,9 +57,9 @@ final class Yii2UseExistsInsteadOfCountRector extends AbstractRector
 }',
                     'if (!Model::find()->where([\'id\' => $id])->exists()) {
     return false;
-}'
+}',
                 ),
-            ]
+            ],
         );
     }
 
@@ -115,7 +115,7 @@ final class Yii2UseExistsInsteadOfCountRector extends AbstractRector
 
         $existsCall = new MethodCall(
             $methodCall->var,
-            new Identifier('exists')
+            new Identifier('exists'),
         );
 
         return $shouldNegate ? new BooleanNot($existsCall) : $existsCall;
@@ -152,7 +152,7 @@ final class Yii2UseExistsInsteadOfCountRector extends AbstractRector
     /**
      * Determine if exists() should be negated
      *
-     * @param Equal|Greater|GreaterOrEqual|Identical|NotEqual|NotIdentical|Smaller|SmallerOrEqual $node   Comparison node
+     * @param Equal|Greater|GreaterOrEqual|Identical|NotEqual|NotIdentical|Smaller|SmallerOrEqual $node               Comparison node
      * @param int                                                                                 $number             Number compared
      * @param bool                                                                                $isMethodCallOnLeft Whether count() is on the left side
      *

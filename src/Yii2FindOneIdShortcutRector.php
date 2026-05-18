@@ -34,7 +34,7 @@ final class Yii2FindOneIdShortcutRector extends AbstractRector
     {
         return new RuleDefinition(
             'Replaces Model::findOne([\'id\' => $id]) with Model::findOne($id)',
-            []
+            [],
         );
     }
 
@@ -86,7 +86,7 @@ final class Yii2FindOneIdShortcutRector extends AbstractRector
         return new StaticCall(
             $node->class,
             new Identifier('findOne'),
-            [new Arg($item->value)]
+            [new Arg($item->value)],
         );
     }
 }

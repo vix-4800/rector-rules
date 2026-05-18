@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Vix\RectorRules;
 
 use PhpParser\Node;
+use PhpParser\Node\Arg;
+use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\ArrayDimFetch;
 use PhpParser\Node\Expr\Assign;
 use PhpParser\Node\Expr\BinaryOp;
@@ -14,7 +16,6 @@ use PhpParser\Node\Expr\BinaryOp\Identical;
 use PhpParser\Node\Expr\BinaryOp\NotEqual;
 use PhpParser\Node\Expr\BinaryOp\NotIdentical;
 use PhpParser\Node\Expr\BooleanNot;
-use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\FuncCall;
 use PhpParser\Node\Expr\List_;
 use PhpParser\Node\Expr\PropertyFetch;
@@ -44,7 +45,7 @@ final class ExtractAssignmentFromIfConditionRector extends AbstractRector
                     '$model = Model::findOne($id);
 if ($model !== null) {
     return $model;
-}'
+}',
                 ),
                 new CodeSample(
                     'if (($user = $this->getUser()) != false) {
@@ -53,7 +54,7 @@ if ($model !== null) {
                     '$user = $this->getUser();
 if ($user != false) {
     echo $user->name;
-}'
+}',
                 ),
                 new CodeSample(
                     'if (!is_null(($model = WebPushSubscription::findOne($id)))) {
@@ -62,7 +63,7 @@ if ($user != false) {
                     '$model = WebPushSubscription::findOne($id);
 if (!is_null($model)) {
     return $model;
-}'
+}',
                 ),
                 new CodeSample(
                     'if (is_array(($items = $this->getItems()))) {
@@ -71,7 +72,7 @@ if (!is_null($model)) {
                     '$items = $this->getItems();
 if (is_array($items)) {
     return $items;
-}'
+}',
                 ),
                 new CodeSample(
                     'if ($obj = $this->user) {
@@ -80,7 +81,7 @@ if (is_array($items)) {
                     '$obj = $this->user;
 if ($obj) {
     return $obj;
-}'
+}',
                 ),
                 new CodeSample(
                     'if ($userId && ($user = User::findIdentity($userId)) !== null) {
@@ -91,9 +92,9 @@ if ($obj) {
     if ($user !== null) {
         return $user;
     }
-}'
+}',
                 ),
-            ]
+            ],
         );
     }
 
@@ -311,7 +312,7 @@ if ($obj) {
         }
 
         foreach ($funcCall->args as $arg) {
-            if (!$arg instanceof Node\Arg) {
+            if (!$arg instanceof Arg) {
                 continue;
             }
 
@@ -421,7 +422,7 @@ if ($obj) {
         $newFuncCall->args = [];
 
         foreach ($originalFuncCall->args as $arg) {
-            if (!$arg instanceof Node\Arg) {
+            if (!$arg instanceof Arg) {
                 $newFuncCall->args[] = $arg;
 
                 continue;

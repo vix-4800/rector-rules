@@ -39,9 +39,9 @@ final class Yii2FindOneFindAllShortcutRector extends AbstractRector
             [
                 new CodeSample(
                     "Model::find()->where(['id' => \$id])->one();",
-                    'Model::findOne($id);'
+                    'Model::findOne($id);',
                 ),
-            ]
+            ],
         );
     }
 
@@ -104,7 +104,7 @@ final class Yii2FindOneFindAllShortcutRector extends AbstractRector
         return new StaticCall(
             $findCall->class,
             new Identifier($newMethod),
-            $newArgs
+            $newArgs,
         );
     }
 
@@ -166,9 +166,11 @@ final class Yii2FindOneFindAllShortcutRector extends AbstractRector
         $filteredArgs = [];
 
         foreach ($args as $arg) {
-            if ($arg instanceof Arg) {
-                $filteredArgs[] = $arg;
+            if (!($arg instanceof Arg)) {
+                continue;
             }
+
+            $filteredArgs[] = $arg;
         }
 
         return $filteredArgs;

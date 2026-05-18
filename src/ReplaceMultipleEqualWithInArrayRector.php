@@ -108,7 +108,7 @@ final class ReplaceMultipleEqualWithInArrayRector extends AbstractRector
         foreach ($comparisons as $comparison) {
             $isCurrentStrict = $comparison instanceof Identical || $comparison instanceof NotIdentical;
 
-            if ($isStrict !== null && $isStrict !== $isCurrentStrict) {
+            if (!in_array($isStrict, [null, $isCurrentStrict], true)) {
                 $isMixed = true;
             }
 

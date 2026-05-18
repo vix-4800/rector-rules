@@ -50,9 +50,9 @@ final class AddTypedClassConstantRector extends AbstractRector
                             public const string NAME = 'John Doe';
                             public const bool ENABLED = true;
                         }
-                        PHP
+                        PHP,
                 ),
-            ]
+            ],
         );
     }
 
@@ -84,7 +84,8 @@ final class AddTypedClassConstantRector extends AbstractRector
             $type = $this->resolveScalarType($const);
 
             if ($type === null) {
-                return null; // at least one value is non-inferrable → skip whole node
+                // at least one value is non-inferrable → skip whole node
+                return null;
             }
 
             $types[] = $type;
@@ -93,7 +94,8 @@ final class AddTypedClassConstantRector extends AbstractRector
         $uniqueTypes = array_unique($types);
 
         if (count($uniqueTypes) !== 1) {
-            return null; // mixed types in one statement → skip
+            // mixed types in one statement → skip
+            return null;
         }
 
         $node->type = new Identifier($uniqueTypes[0]);

@@ -20,7 +20,7 @@ final class Yii2FindAllIdShortcutRector extends AbstractRector
     {
         return new RuleDefinition(
             'Replaces Model::findAll([\'id\' => $id]) with Model::findAll($id)',
-            []
+            [],
         );
     }
 
