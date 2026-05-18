@@ -110,7 +110,7 @@ final class NullableBoolReturnToFalseRector extends AbstractRector
     {
         $nullReturns = [];
 
-        $this->traverseStmts($node->stmts ?? [], $nullReturns);
+        $this->traverseStmts(array_values($node->stmts ?? []), $nullReturns);
 
         return $nullReturns;
     }
@@ -144,10 +144,20 @@ final class NullableBoolReturnToFalseRector extends AbstractRector
             foreach ($stmt->getSubNodeNames() as $subNodeName) {
                 $sub = $stmt->{$subNodeName};
 
-                if (is_array($sub)) {
-                    $this->traverseStmts($sub, $nullReturns);
-                } elseif ($sub instanceof Stmt) {
+                if ($sub instanceof Stmt) {
                     $this->traverseStmts([$sub], $nullReturns);
+                } elseif (is_array($sub)) {
+                    $nestedStatements = [];
+
+                    foreach ($sub as $nestedNode) {
+                        if ($nestedNode instanceof Stmt) {
+                            $nestedStatements[] = $nestedNode;
+                        }
+                    }
+
+                    if ($nestedStatements !== []) {
+                        $this->traverseStmts($nestedStatements, $nullReturns);
+                    }
                 }
             }
         }
