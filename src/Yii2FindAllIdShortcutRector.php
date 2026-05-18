@@ -7,10 +7,10 @@ namespace Vix\RectorRules;
 use PhpParser\Node;
 use PhpParser\Node\Arg;
 use PhpParser\Node\Expr\Array_;
-use PhpParser\Node\Expr\ArrayItem;
 use PhpParser\Node\Expr\StaticCall;
 use PhpParser\Node\Identifier;
 use PhpParser\Node\Scalar\String_;
+use PhpParser\Node\VariadicPlaceholder;
 use Rector\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 
@@ -45,6 +45,10 @@ final class Yii2FindAllIdShortcutRector extends AbstractRector
 
         $firstArg = $node->args[0];
 
+        if ($firstArg instanceof VariadicPlaceholder) {
+            return null;
+        }
+
         if (!$firstArg->value instanceof Array_) {
             return null;
         }
@@ -56,10 +60,6 @@ final class Yii2FindAllIdShortcutRector extends AbstractRector
         }
 
         $firstItem = $array->items[0];
-
-        if (!$firstItem instanceof ArrayItem) {
-            return null;
-        }
 
         if (!$firstItem->key instanceof String_ || $firstItem->key->value !== 'id') {
             return null;
