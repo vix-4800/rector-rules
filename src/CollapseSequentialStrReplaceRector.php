@@ -238,7 +238,7 @@ final class CollapseSequentialStrReplaceRector extends AbstractRector
 
         $call = $this->matchStrReplaceCall($assign->expr);
 
-        if ($call === null || !$this->areNodesEqual($replacement, $call['replacement'])) {
+        if ($call === null || !$this->nodeComparator->areNodesEqual($replacement, $call['replacement'])) {
             return null;
         }
 
