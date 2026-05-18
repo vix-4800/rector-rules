@@ -39,7 +39,7 @@
   },
   "scripts": {
     "test": "php -d memory_limit=1G vendor/bin/phpunit --colors=always",
-    "static-analysis": "vendor/bin/phpstan analyse --memory-limit=1G --debug",
+    "static-analysis": "vendor/bin/phpstan analyse --memory-limit=1G",
     "check": [
       "@static-analysis",
       "@test"
