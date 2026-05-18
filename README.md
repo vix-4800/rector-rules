@@ -7,6 +7,11 @@ Custom Rector rules package.
 [![PHP Version](https://img.shields.io/badge/php-%5E8.4-blue)](https://www.php.net/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+- [Rector Rules](#rector-rules)
+  - [Install](#install)
+  - [Usage](#usage)
+  - [Rules](#rules)
+
 ## Install
 
 ```bash
