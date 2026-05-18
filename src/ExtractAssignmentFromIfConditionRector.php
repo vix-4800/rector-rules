@@ -14,6 +14,7 @@ use PhpParser\Node\Expr\BinaryOp\Identical;
 use PhpParser\Node\Expr\BinaryOp\NotEqual;
 use PhpParser\Node\Expr\BinaryOp\NotIdentical;
 use PhpParser\Node\Expr\BooleanNot;
+use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\FuncCall;
 use PhpParser\Node\Expr\List_;
 use PhpParser\Node\Expr\PropertyFetch;
@@ -106,13 +107,11 @@ if ($obj) {
 
     /**
      * @param If_ $node
+     *
+     * @return list<Node>|null
      */
     public function refactor(Node $node): ?array
     {
-        if (!$node instanceof If_) {
-            return null;
-        }
-
         $condition = $node->cond;
 
         if ($condition instanceof BooleanAnd) {
@@ -138,6 +137,9 @@ if ($obj) {
         return null;
     }
 
+    /**
+     * @return list<Node>|null
+     */
     private function handleAssignmentCondition(If_ $node, Assign $assignment): ?array
     {
         $replacement = $this->createConditionReplacement($assignment);
@@ -155,6 +157,9 @@ if ($obj) {
         ];
     }
 
+    /**
+     * @return list<Node>|null
+     */
     private function handleBooleanAndCondition(If_ $node, BooleanAnd $booleanAnd): ?array
     {
         if ($node->elseifs !== [] || $node->else !== null) {
@@ -178,6 +183,9 @@ if ($obj) {
         return [$leftIf];
     }
 
+    /**
+     * @return list<Node>|null
+     */
     private function handleBinaryOpCondition(If_ $node, BinaryOp $binaryOp): ?array
     {
         $assignment = null;
@@ -217,6 +225,9 @@ if ($obj) {
         ];
     }
 
+    /**
+     * @return list<Node>|null
+     */
     private function handleBooleanNotCondition(If_ $node, BooleanNot $booleanNot): ?array
     {
         if ($booleanNot->expr instanceof Assign) {
@@ -265,6 +276,9 @@ if ($obj) {
         ];
     }
 
+    /**
+     * @return list<Node>|null
+     */
     private function handleFuncCallCondition(If_ $node, FuncCall $funcCall): ?array
     {
         $assignment = $this->extractAssignmentFromFuncCall($funcCall);
@@ -297,6 +311,10 @@ if ($obj) {
         }
 
         foreach ($funcCall->args as $arg) {
+            if (!$arg instanceof Node\Arg) {
+                continue;
+            }
+
             if ($arg->value instanceof Assign) {
                 return $arg->value;
             }
@@ -351,7 +369,7 @@ if ($obj) {
         ];
     }
 
-    private function createConditionReplacement(Assign $assignment): ?Node
+    private function createConditionReplacement(Assign $assignment): ?Expr
     {
         if ($assignment->var instanceof List_) {
             if (!$this->isSafeListConditionReplacement($assignment->expr)) {
@@ -364,7 +382,7 @@ if ($obj) {
         return $assignment->var;
     }
 
-    private function isSafeListConditionReplacement(Node $node): bool
+    private function isSafeListConditionReplacement(Expr $node): bool
     {
         return $node instanceof Variable
             || $node instanceof PropertyFetch
@@ -397,12 +415,18 @@ if ($obj) {
         ], true);
     }
 
-    private function createFuncCallWithoutAssignment(FuncCall $originalFuncCall, Node $replacementVar): FuncCall
+    private function createFuncCallWithoutAssignment(FuncCall $originalFuncCall, Expr $replacementVar): FuncCall
     {
         $newFuncCall = clone $originalFuncCall;
         $newFuncCall->args = [];
 
         foreach ($originalFuncCall->args as $arg) {
+            if (!$arg instanceof Node\Arg) {
+                $newFuncCall->args[] = $arg;
+
+                continue;
+            }
+
             if (!$arg->value instanceof Assign) {
                 $newFuncCall->args[] = $arg;
 
@@ -425,7 +449,7 @@ if ($obj) {
             || $binaryOp instanceof NotEqual;
     }
 
-    private function createBinaryOp(BinaryOp $originalOp, Node $left, Node $right): BinaryOp
+    private function createBinaryOp(BinaryOp $originalOp, Expr $left, Expr $right): BinaryOp
     {
         if ($originalOp instanceof Identical) {
             return new Identical($left, $right);
