@@ -2,6 +2,11 @@
 
 Custom Rector rules package.
 
+[![Tests](https://github.com/vix-4800/rector-rules/actions/workflows/php.yml/badge.svg)](https://github.com/vix-4800/rector-rules/actions/workflows/php.yml)
+[![PHPStan](https://github.com/vix-4800/rector-rules/actions/workflows/phpstan.yml/badge.svg)](https://github.com/vix-4800/rector-rules/actions/workflows/phpstan.yml)
+[![PHP Version](https://img.shields.io/badge/php-%5E8.4-blue)](https://www.php.net/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 ## Install
 
 ```bash
