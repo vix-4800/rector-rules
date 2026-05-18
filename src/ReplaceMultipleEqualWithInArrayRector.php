@@ -130,28 +130,21 @@ final class ReplaceMultipleEqualWithInArrayRector extends AbstractRector
             $isStrict = true;
         }
 
-        $firstVariable = null;
+        $firstSubject = null;
         $values = [];
 
         foreach ($comparisons as $comparison) {
-            $variable = null;
-            $value = null;
+            $pair = $this->resolveSubjectAndValue($comparison, $firstSubject);
 
-            if ($this->areNodesEqual($comparison->left, $firstVariable ?? $comparison->left)) {
-                $variable = $comparison->left;
-                $value = $comparison->right;
-            } elseif ($this->areNodesEqual($comparison->right, $firstVariable ?? $comparison->right)) {
-                $variable = $comparison->right;
-                $value = $comparison->left;
-            } else {
+            if ($pair === null) {
                 return null;
             }
 
-            if ($firstVariable === null) {
-                $firstVariable = $variable;
+            if ($firstSubject === null) {
+                $firstSubject = $pair['subject'];
             }
 
-            $values[] = $value;
+            $values[] = $pair['value'];
         }
 
         $arrayItems = [];
@@ -163,7 +156,7 @@ final class ReplaceMultipleEqualWithInArrayRector extends AbstractRector
         $valuesArray = new Array_($arrayItems);
 
         $args = [
-            new Arg($firstVariable),
+            new Arg($firstSubject),
             new Arg($valuesArray),
         ];
 
@@ -181,6 +174,51 @@ final class ReplaceMultipleEqualWithInArrayRector extends AbstractRector
         }
 
         return $funcCall;
+    }
+
+    /**
+     * @param Equal|Identical|NotEqual|NotIdentical $comparison
+     *
+     * @return array{subject: Node, value: Node}|null
+     */
+    private function resolveSubjectAndValue(Node $comparison, ?Node $knownSubject): ?array
+    {
+        if ($knownSubject !== null) {
+            if ($this->areNodesEqual($comparison->left, $knownSubject)) {
+                return [
+                    'subject' => $comparison->left,
+                    'value' => $comparison->right,
+                ];
+            }
+
+            if ($this->areNodesEqual($comparison->right, $knownSubject)) {
+                return [
+                    'subject' => $comparison->right,
+                    'value' => $comparison->left,
+                ];
+            }
+
+            return null;
+        }
+
+        if ($this->isLiteralValue($comparison->left) && !$this->isLiteralValue($comparison->right)) {
+            return [
+                'subject' => $comparison->right,
+                'value' => $comparison->left,
+            ];
+        }
+
+        return [
+            'subject' => $comparison->left,
+            'value' => $comparison->right,
+        ];
+    }
+
+    private function isLiteralValue(Node $node): bool
+    {
+        return $node instanceof ConstFetch
+            || $node instanceof LNumber
+            || $node instanceof String_;
     }
 
     /**
@@ -286,13 +324,13 @@ final class ReplaceMultipleEqualWithInArrayRector extends AbstractRector
         $values = [];
 
         foreach ($comparisons as $comparison) {
-            if ($comparison->left instanceof Variable) {
-                $values[] = $comparison->right;
-            } elseif ($comparison->right instanceof Variable) {
-                $values[] = $comparison->left;
-            } else {
+            $pair = $this->resolveSubjectAndValue($comparison, null);
+
+            if ($pair === null || !$pair['subject'] instanceof Variable) {
                 return false;
             }
+
+            $values[] = $pair['value'];
         }
 
         return $this->containsOnlySimpleValues($values);
