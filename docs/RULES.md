@@ -1,5 +1,19 @@
 # Rules Reference
 
+- [Rules Reference](#rules-reference)
+  - [AddTypedClassConstantRector](#addtypedclassconstantrector)
+  - [CollapseSequentialStrReplaceRector](#collapsesequentialstrreplacerector)
+  - [ExtractAssignmentFromIfConditionRector](#extractassignmentfromifconditionrector)
+  - [NullableBoolReturnToFalseRector](#nullableboolreturntofalserector)
+  - [ReplaceMultipleEqualWithInArrayRector](#replacemultipleequalwithinarrayrector)
+  - [Yii2FindAllIdShortcutRector](#yii2findallidshortcutrector)
+  - [Yii2FindOneFindAllShortcutRector](#yii2findonefindallshortcutrector)
+  - [Yii2FindOneIdShortcutRector](#yii2findoneidshortcutrector)
+  - [Yii2PropertyAccessRector](#yii2propertyaccessrector)
+  - [Yii2UseExistsInsteadOfCountRector](#yii2useexistsinsteadofcountrector)
+  - [Yii2UseExistsInsteadOfOneNotNullRector](#yii2useexistsinsteadofonenotnullrector)
+  - [Yii2UserFindOneToIdentityRector](#yii2userfindonetoidentityrector)
+
 Detailed documentation for every Rector rule shipped by this package.
 
 All current rules are parameterless. If a rule becomes configurable in the future, its parameters should be documented in its section.
