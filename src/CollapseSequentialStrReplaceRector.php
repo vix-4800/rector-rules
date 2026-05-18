@@ -6,9 +6,9 @@ namespace Vix\RectorRules;
 
 use PhpParser\Node;
 use PhpParser\Node\Arg;
+use PhpParser\Node\ArrayItem;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\Array_;
-use PhpParser\Node\Expr\ArrayItem;
 use PhpParser\Node\Expr\Assign;
 use PhpParser\Node\Expr\Closure;
 use PhpParser\Node\Expr\FuncCall;
@@ -70,9 +70,29 @@ final class CollapseSequentialStrReplaceRector extends AbstractRector
             return null;
         }
 
-        $hasChanged = $this->refactorStatements($node->stmts);
+        $statements = $node->stmts;
+        $hasChanged = $this->refactorStatementList($statements);
+
+        if ($hasChanged) {
+            $node->stmts = $statements;
+        }
 
         return $hasChanged ? $node : null;
+    }
+
+    /**
+     * @param array<Stmt> $statements
+     */
+    private function refactorStatementList(array &$statements): bool
+    {
+        $normalizedStatements = array_values($statements);
+        $hasChanged = $this->refactorStatements($normalizedStatements);
+
+        if ($hasChanged) {
+            $statements = $normalizedStatements;
+        }
+
+        return $hasChanged;
     }
 
     /**
@@ -122,8 +142,31 @@ final class CollapseSequentialStrReplaceRector extends AbstractRector
     {
         $hasChanged = false;
 
-        if (property_exists($statement, 'stmts') && is_array($statement->stmts) && $statement->stmts !== []) {
-            $hasChanged = $this->refactorStatements($statement->stmts) || $hasChanged;
+        if ($statement instanceof Stmt\If_) {
+            if ($this->refactorStatementList($statement->stmts)) {
+                $hasChanged = true;
+            }
+
+            foreach ($statement->elseifs as $elseif) {
+                if ($this->refactorStatementList($elseif->stmts)) {
+                    $hasChanged = true;
+                }
+            }
+
+            if ($statement->else !== null && $this->refactorStatementList($statement->else->stmts)) {
+                $hasChanged = true;
+            }
+        }
+
+        if (
+            $statement instanceof Stmt\For_
+            || $statement instanceof Stmt\Foreach_
+            || $statement instanceof Stmt\While_
+            || $statement instanceof Stmt\Do_
+        ) {
+            if ($this->refactorStatementList($statement->stmts)) {
+                $hasChanged = true;
+            }
         }
 
         if ($statement instanceof Stmt\TryCatch) {
@@ -132,11 +175,17 @@ final class CollapseSequentialStrReplaceRector extends AbstractRector
                     continue;
                 }
 
-                $hasChanged = $this->refactorStatements($catch->stmts) || $hasChanged;
+                if ($this->refactorStatementList($catch->stmts)) {
+                    $hasChanged = true;
+                }
             }
 
-            if ($statement->finally !== null && $statement->finally->stmts !== []) {
-                $hasChanged = $this->refactorStatements($statement->finally->stmts) || $hasChanged;
+            if (
+                $statement->finally !== null
+                && $statement->finally->stmts !== []
+                && $this->refactorStatementList($statement->finally->stmts)
+            ) {
+                $hasChanged = true;
             }
         }
 
@@ -146,7 +195,9 @@ final class CollapseSequentialStrReplaceRector extends AbstractRector
                     continue;
                 }
 
-                $hasChanged = $this->refactorStatements($case->stmts) || $hasChanged;
+                if ($this->refactorStatementList($case->stmts)) {
+                    $hasChanged = true;
+                }
             }
         }
 
@@ -257,16 +308,22 @@ final class CollapseSequentialStrReplaceRector extends AbstractRector
             return null;
         }
 
-        $searches = $this->extractSearchStrings($funcCall->args[0]->value);
+        [$searchArg, $replacementArg, $subjectArg] = $funcCall->args;
+
+        if (!$searchArg instanceof Arg || !$replacementArg instanceof Arg || !$subjectArg instanceof Arg) {
+            return null;
+        }
+
+        $searches = $this->extractSearchStrings($searchArg->value);
 
         if ($searches === []) {
             return null;
         }
 
         return [
-            'replacement' => $funcCall->args[1]->value,
+            'replacement' => $replacementArg->value,
             'searches' => $searches,
-            'subject' => $funcCall->args[2]->value,
+            'subject' => $subjectArg->value,
         ];
     }
 
@@ -334,7 +391,7 @@ final class CollapseSequentialStrReplaceRector extends AbstractRector
         $searches = [];
 
         foreach ($search->items as $item) {
-            if (!$item instanceof ArrayItem || !$item->value instanceof String_) {
+            if (!$item->value instanceof String_) {
                 return [];
             }
 
