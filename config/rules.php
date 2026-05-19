@@ -12,6 +12,7 @@ use Vix\RectorRules\Yii2FindAllIdShortcutRector;
 use Vix\RectorRules\Yii2FindOneFindAllShortcutRector;
 use Vix\RectorRules\Yii2FindOneIdShortcutRector;
 use Vix\RectorRules\Yii2PropertyAccessRector;
+use Vix\RectorRules\Yii2RedundantActiveRecordSelfLookupRector;
 use Vix\RectorRules\Yii2UseExistsInsteadOfCountRector;
 use Vix\RectorRules\Yii2UseExistsInsteadOfOneNotNullRector;
 use Vix\RectorRules\Yii2UserFindOneToIdentityRector;
@@ -27,6 +28,7 @@ return static function (RectorConfig $rectorConfig): void {
         Yii2FindOneFindAllShortcutRector::class,
         Yii2FindOneIdShortcutRector::class,
         Yii2PropertyAccessRector::class,
+        Yii2RedundantActiveRecordSelfLookupRector::class,
         Yii2UseExistsInsteadOfCountRector::class,
         Yii2UseExistsInsteadOfOneNotNullRector::class,
         Yii2UserFindOneToIdentityRector::class,

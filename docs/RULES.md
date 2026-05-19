@@ -18,6 +18,7 @@ All current rules are parameterless. If a rule becomes configurable in the futur
     - [Yii2FindOneFindAllShortcutRector](#yii2findonefindallshortcutrector)
     - [Yii2FindOneIdShortcutRector](#yii2findoneidshortcutrector)
     - [Yii2PropertyAccessRector](#yii2propertyaccessrector)
+    - [Yii2RedundantActiveRecordSelfLookupRector](#yii2redundantactiverecordselflookuprector)
     - [Yii2UseExistsInsteadOfCountRector](#yii2useexistsinsteadofcountrector)
     - [Yii2UseExistsInsteadOfOneNotNullRector](#yii2useexistsinsteadofonenotnullrector)
     - [Yii2UserFindOneToIdentityRector](#yii2userfindonetoidentityrector)
@@ -233,6 +234,60 @@ $identity = Yii::$app->user->getIdentity();
 ```php
 $id = Yii::$app->user->id;
 $identity = Yii::$app->user->identity;
+```
+
+Parameters: none.
+
+### Yii2RedundantActiveRecordSelfLookupRector
+
+Replaces redundant lookup of the current Yii2 Active Record model by its own `id` with `$this`. It supports `self`, `static`, and the current class name, plus the direct `findOne()` form and `find()->where(...)->one()` form. `limit(1)` between `where()` and `one()` is also supported.
+
+**Before**
+
+```php
+final class User extends ActiveRecord
+{
+    public function getCurrentModel(): self
+    {
+        return self::findOne($this->id);
+    }
+}
+```
+
+**After**
+
+```php
+final class User extends ActiveRecord
+{
+    public function getCurrentModel(): self
+    {
+        return $this;
+    }
+}
+```
+
+**Before**
+
+```php
+final class User extends ActiveRecord
+{
+    public function getCurrentModel(): self
+    {
+        return self::find()->where(['id' => $this->id])->limit(1)->one();
+    }
+}
+```
+
+**After**
+
+```php
+final class User extends ActiveRecord
+{
+    public function getCurrentModel(): self
+    {
+        return $this;
+    }
+}
 ```
 
 Parameters: none.
