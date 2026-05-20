@@ -10,27 +10,37 @@ abstract class AbstractRuleTestCase extends AbstractRectorTestCase
 {
     abstract protected function getRuleClass(): string;
 
+    /**
+     * @return array<string, mixed>
+     */
+    protected function getRuleConfiguration(): array
+    {
+        return [];
+    }
+
     public function provideConfigFilePath(): string
     {
         $configFilePath = $this->getTempDirectory() . '/config.php';
         $ruleClass = '\\' . $this->getRuleClass();
+        $ruleConfiguration = $this->getRuleConfiguration();
+        $ruleRegistration = $ruleConfiguration === []
+            ? "\$rectorConfig->rule({$ruleClass}::class);"
+            : "\$rectorConfig->ruleWithConfiguration({$ruleClass}::class, " . var_export($ruleConfiguration, true) . ");";
 
-        if (!is_file($configFilePath)) {
-            file_put_contents(
-                $configFilePath,
-                <<<PHP
-                <?php
+        file_put_contents(
+            $configFilePath,
+            <<<PHP
+            <?php
 
-                declare(strict_types=1);
+            declare(strict_types=1);
 
-                use Rector\Config\RectorConfig;
+            use Rector\Config\RectorConfig;
 
-                return static function (RectorConfig \$rectorConfig): void {
-                    \$rectorConfig->rule({$ruleClass}::class);
-                };
-                PHP
-            );
-        }
+            return static function (RectorConfig \$rectorConfig): void {
+                {$ruleRegistration}
+            };
+            PHP
+        );
 
         return $configFilePath;
     }

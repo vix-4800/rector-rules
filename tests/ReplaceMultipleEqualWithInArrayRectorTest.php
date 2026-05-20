@@ -128,5 +128,15 @@ final class ReplaceMultipleEqualWithInArrayRectorTest extends AbstractRuleTestCa
             }
             PHP,
         ];
+
+        yield 'default threshold skips two comparisons' => [
+            <<<'PHP'
+            <?php
+
+            if ($status === 'new' || $status === 'active') {
+                return true;
+            }
+            PHP,
+        ];
     }
 }
