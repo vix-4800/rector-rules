@@ -26,7 +26,7 @@ use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
  * This rule is risky because it assumes the subject expression has no side effects;
  * in the original ternary the condition and the method/property access may evaluate
  * the same expression independently, while the null-safe operator evaluates it once.
- * The rule is restricted to simple variables to minimise this risk.
+ * The rule is restricted to simple variables to minimize this risk.
  */
 final class TernaryNullCheckToNullsafeOperatorRector extends AbstractRector implements MinPhpVersionInterface
 {
@@ -196,8 +196,8 @@ final class TernaryNullCheckToNullsafeOperatorRector extends AbstractRector impl
             return new PropertyFetch($transformedVar, $expr->name);
         }
 
-        if ($expr instanceof NullsafeMethodCall) {
-            if ($this->nodeComparator->areNodesEqual($expr->var, $subject)) {
+        if ($expr instanceof NullsafeMethodCall || $expr instanceof NullsafePropertyFetch) {
+            if ($this->isDirectlyOnSubject($expr, $subject)) {
                 // Already null-safe at the root; leave as-is.
                 return $expr;
             }
@@ -208,23 +208,21 @@ final class TernaryNullCheckToNullsafeOperatorRector extends AbstractRector impl
                 return null;
             }
 
-            return new NullsafeMethodCall($transformedVar, $expr->name, $expr->args);
-        }
-
-        if ($expr instanceof NullsafePropertyFetch) {
-            if ($this->nodeComparator->areNodesEqual($expr->var, $subject)) {
-                return $expr;
-            }
-
-            $transformedVar = $this->transformChain($expr->var, $subject);
-
-            if ($transformedVar === null) {
-                return null;
+            if ($expr instanceof NullsafeMethodCall) {
+                return new NullsafeMethodCall($transformedVar, $expr->name, $expr->args);
             }
 
             return new NullsafePropertyFetch($transformedVar, $expr->name);
         }
 
         return null;
+    }
+
+    /**
+     * Returns true when the expression's receiver is the subject variable itself.
+     */
+    private function isDirectlyOnSubject(NullsafeMethodCall|NullsafePropertyFetch $expr, Variable $subject): bool
+    {
+        return $this->nodeComparator->areNodesEqual($expr->var, $subject);
     }
 }
