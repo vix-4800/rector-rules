@@ -12,6 +12,7 @@ All current rules are parameterless. If a rule becomes configurable in the futur
   - [CollapseSequentialStrReplaceRector](#collapsesequentialstrreplacerector)
   - [ExtractAssignmentFromIfConditionRector](#extractassignmentfromifconditionrector)
   - [NullableBoolReturnToFalseRector](#nullableboolreturntofalserector)
+  - [NullCoalescingToIssetRector ⚠️ risky](#nullcoalescingtoissetrector-️-risky)
   - [ReplaceMultipleEqualWithInArrayRector](#replacemultipleequalwithinarrayrector)
   - [Yii2](#yii2)
     - [Yii2FindAllIdShortcutRector](#yii2findallidshortcutrector)
@@ -136,6 +137,51 @@ function isReady(): bool
 
     return true;
 }
+```
+
+Parameters: none.
+
+## NullCoalescingToIssetRector ⚠️ risky
+
+> **Risky** — this rule may change observable behaviour for objects that implement `ArrayAccess` or define magic property methods (`__isset` / `__get`). For plain arrays and ordinary variables the transformation is always safe.
+
+Converts strict null-coalescing comparisons (`=== null` / `!== null`) into `isset()` or `!isset()` calls when the result is equivalent. Only strict identity operators are matched; loose `==` / `!=` are intentionally left untouched because `0 == null` is `true` in PHP while `isset(0)` is not.
+
+| Before | After |
+|---|---|
+| `($expr ?? null) !== null` | `isset($expr)` |
+| `($expr ?? null) === null` | `!isset($expr)` |
+| `null !== ($expr ?? null)` | `isset($expr)` |
+| `null === ($expr ?? null)` | `!isset($expr)` |
+
+Supported left-hand-side expressions: variables, array dimension fetch (including nested), property fetch, nullsafe property fetch, and static property fetch. Function and method call results are **not** rewritten because they are not valid `isset()` arguments.
+
+**Before**
+
+```php
+if (($payload['user'] ?? null) !== null) {
+    processUser();
+}
+
+if (($var ?? null) === null) {
+    return;
+}
+
+$result = ($config['key'] ?? null) !== null ? 'yes' : 'no';
+```
+
+**After**
+
+```php
+if (isset($payload['user'])) {
+    processUser();
+}
+
+if (!isset($var)) {
+    return;
+}
+
+$result = isset($config['key']) ? 'yes' : 'no';
 ```
 
 Parameters: none.
