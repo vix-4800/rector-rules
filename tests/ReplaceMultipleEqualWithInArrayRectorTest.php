@@ -49,14 +49,14 @@ final class ReplaceMultipleEqualWithInArrayRectorTest extends AbstractRuleTestCa
             <<<'PHP'
             <?php
 
-            if ('new' == $status || 'active' == $status) {
+            if ('new' == $status || 'active' == $status || 'done' == $status) {
                 return true;
             }
             PHP,
             <<<'PHP'
             <?php
 
-            if (in_array($status, ['new', 'active'])) {
+            if (in_array($status, ['new', 'active', 'done'])) {
                 return true;
             }
             PHP,
@@ -83,14 +83,14 @@ final class ReplaceMultipleEqualWithInArrayRectorTest extends AbstractRuleTestCa
             <<<'PHP'
             <?php
 
-            if ($type === 1 || $type == 2) {
+            if ($type === 1 || $type == 2 || $type === 3) {
                 return true;
             }
             PHP,
             <<<'PHP'
             <?php
 
-            if (in_array($type, [1, 2], true)) {
+            if (in_array($type, [1, 2, 3], true)) {
                 return true;
             }
             PHP,
@@ -124,6 +124,16 @@ final class ReplaceMultipleEqualWithInArrayRectorTest extends AbstractRuleTestCa
             <?php
 
             if ($status === 'new' || ($status === 'active' && $enabled)) {
+                return true;
+            }
+            PHP,
+        ];
+
+        yield 'default threshold skips two comparisons' => [
+            <<<'PHP'
+            <?php
+
+            if ($status === 'new' || $status === 'active') {
                 return true;
             }
             PHP,

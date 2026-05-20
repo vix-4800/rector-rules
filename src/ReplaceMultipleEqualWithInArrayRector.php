@@ -22,8 +22,10 @@ use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Name;
 use PhpParser\Node\Scalar\Int_;
 use PhpParser\Node\Scalar\String_;
+use Rector\Contract\Rector\ConfigurableRectorInterface;
 use Rector\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
+use Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 
 /**
@@ -31,14 +33,20 @@ use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
  * Example: $var === 'a' || $var === 'b' || $var === 'c'
  * becomes: in_array($var, ['a', 'b', 'c'], true)
  *
- * Example: $var == 'a' || $var == 'b'
- * becomes: in_array($var, ['a', 'b'])
+ * Example: $var == 'a' || $var == 'b' || $var == 'c'
+ * becomes: in_array($var, ['a', 'b', 'c'])
  *
- * Example: $var !== 'a' && $var !== 'b'
- * becomes: !in_array($var, ['a', 'b'], true)
+ * Example: $var !== 'a' && $var !== 'b' && $var !== 'c'
+ * becomes: !in_array($var, ['a', 'b', 'c'], true)
  */
-final class ReplaceMultipleEqualWithInArrayRector extends AbstractRector
+final class ReplaceMultipleEqualWithInArrayRector extends AbstractRector implements ConfigurableRectorInterface
 {
+    public const THRESHOLD = 'threshold';
+
+    private const DEFAULT_THRESHOLD = 3;
+
+    private int $threshold = self::DEFAULT_THRESHOLD;
+
     /**
      * @return RuleDefinition
      */
@@ -56,23 +64,57 @@ final class ReplaceMultipleEqualWithInArrayRector extends AbstractRector
                     }'
                 ),
                 new CodeSample(
-                    'if ($status == \'active\' || $status == \'pending\') {
+                    'if ($status == \'active\' || $status == \'pending\' || $status == \'archived\') {
                         // do something
                     }',
-                    'if (in_array($status, [\'active\', \'pending\'])) {
+                    'if (in_array($status, [\'active\', \'pending\', \'archived\'])) {
                         // do something
                     }'
                 ),
                 new CodeSample(
-                    'if ($direction !== \'top\' && $direction !== \'bottom\') {
+                    'if ($direction !== \'top\' && $direction !== \'bottom\' && $direction !== \'left\') {
                         return \'bottom\';
                     }',
-                    'if (!in_array($direction, [\'top\', \'bottom\'], true)) {
+                    'if (!in_array($direction, [\'top\', \'bottom\', \'left\'], true)) {
                         return \'bottom\';
                     }'
                 ),
+                new ConfiguredCodeSample(
+                    'if ($status == \'active\' || $status == \'pending\') {
+                        return true;
+                    }',
+                    'if (in_array($status, [\'active\', \'pending\'])) {
+                        return true;
+                    }',
+                    [self::THRESHOLD => 2]
+                ),
             ]
         );
+    }
+
+    /**
+     * @param mixed[] $configuration
+     */
+    public function configure(array $configuration): void
+    {
+        if ($configuration === []) {
+            $this->threshold = self::DEFAULT_THRESHOLD;
+
+            return;
+        }
+
+        if (
+            !array_key_exists(self::THRESHOLD, $configuration)
+            || !is_int($configuration[self::THRESHOLD])
+            || $configuration[self::THRESHOLD] < 2
+        ) {
+            throw new \InvalidArgumentException(sprintf(
+                'Configuration "%s" must be an integer greater than or equal to 2.',
+                self::THRESHOLD
+            ));
+        }
+
+        $this->threshold = $configuration[self::THRESHOLD];
     }
 
     /**
@@ -94,7 +136,7 @@ final class ReplaceMultipleEqualWithInArrayRector extends AbstractRector
             return null;
         }
 
-        if (count($comparisons) < 2) {
+        if (count($comparisons) < $this->threshold) {
             return null;
         }
 
@@ -134,6 +176,10 @@ final class ReplaceMultipleEqualWithInArrayRector extends AbstractRector
             }
 
             $values[] = $pair['value'];
+        }
+
+        if (!$firstSubject instanceof Expr) {
+            return null;
         }
 
         $arrayItems = [];
