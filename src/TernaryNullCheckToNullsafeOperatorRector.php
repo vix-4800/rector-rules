@@ -6,6 +6,7 @@ namespace Vix\RectorRules;
 
 use PhpParser\Node;
 use PhpParser\Node\Expr;
+use PhpParser\Node\Expr\BinaryOp\BooleanAnd;
 use PhpParser\Node\Expr\BinaryOp\Identical;
 use PhpParser\Node\Expr\BinaryOp\NotIdentical;
 use PhpParser\Node\Expr\ConstFetch;
@@ -15,6 +16,7 @@ use PhpParser\Node\Expr\NullsafePropertyFetch;
 use PhpParser\Node\Expr\PropertyFetch;
 use PhpParser\Node\Expr\Ternary;
 use PhpParser\Node\Expr\Variable;
+use PhpParser\Node\Stmt\If_;
 use Rector\Rector\AbstractRector;
 use Rector\ValueObject\PhpVersionFeature;
 use Rector\VersionBonding\Contract\MinPhpVersionInterface;
@@ -33,7 +35,7 @@ final class TernaryNullCheckToNullsafeOperatorRector extends AbstractRector impl
     public function getRuleDefinition(): RuleDefinition
     {
         return new RuleDefinition(
-            '[RISKY] Replaces ternary null checks with the null-safe operator when the expression matches the supported pattern',
+            '[RISKY] Replaces supported null-check patterns with the null-safe operator',
             [
                 new CodeSample(
                     '$name = $user !== null ? $user->getName() : null;',
@@ -46,6 +48,22 @@ final class TernaryNullCheckToNullsafeOperatorRector extends AbstractRector impl
                 new CodeSample(
                     '$city = $user === null ? null : $user->getAddress()->getCity();',
                     '$city = $user?->getAddress()->getCity();'
+                ),
+                new CodeSample(
+                    '$name = $user ? $user->getName() : null;',
+                    '$name = $user?->getName();'
+                ),
+                new CodeSample(
+                    <<<'CODE_SAMPLE'
+                    if ($user !== null && $user->city !== null && $user->city->country !== null) {
+                        echo $user->city->country->name;
+                    }
+                    CODE_SAMPLE,
+                    <<<'CODE_SAMPLE'
+                    if ($user?->city?->country !== null) {
+                        echo $user->city->country->name;
+                    }
+                    CODE_SAMPLE
                 ),
             ]
         );
@@ -61,14 +79,18 @@ final class TernaryNullCheckToNullsafeOperatorRector extends AbstractRector impl
      */
     public function getNodeTypes(): array
     {
-        return [Ternary::class];
+        return [Ternary::class, If_::class];
     }
 
     /**
-     * @param Ternary $node
+     * @param Ternary|If_ $node
      */
     public function refactor(Node $node): ?Node
     {
+        if ($node instanceof If_) {
+            return $this->refactorIf($node);
+        }
+
         $extracted = $this->extractNullCheckParts($node);
 
         if ($extracted === null) {
@@ -94,6 +116,7 @@ final class TernaryNullCheckToNullsafeOperatorRector extends AbstractRector impl
      *   null !== $var ? $var->… : null
      *   $var === null ? null : $var->…
      *   null === $var ? null : $var->…
+     *   $var ? $var->… : null
      *
      * @return array{0: Expr, 1: Expr}|null
      */
@@ -117,6 +140,10 @@ final class TernaryNullCheckToNullsafeOperatorRector extends AbstractRector impl
             if ($subject !== null && $this->isNullExpr($node->if)) {
                 return [$subject, $node->else];
             }
+        }
+
+        if ($node->if !== null && $this->isNullExpr($node->else)) {
+            return [$node->cond, $node->if];
         }
 
         return null;
@@ -224,5 +251,130 @@ final class TernaryNullCheckToNullsafeOperatorRector extends AbstractRector impl
     private function isDirectlyOnSubject(NullsafeMethodCall|NullsafePropertyFetch $expr, Variable $subject): bool
     {
         return $this->nodeComparator->areNodesEqual($expr->var, $subject);
+    }
+
+    private function refactorIf(If_ $node): ?If_
+    {
+        if (!$node->cond instanceof BooleanAnd) {
+            return null;
+        }
+
+        $checkedExpressions = $this->extractCheckedExpressionsFromBooleanAnd($node->cond);
+
+        if ($checkedExpressions === null || count($checkedExpressions) < 2) {
+            return null;
+        }
+
+        $subject = $checkedExpressions[0];
+
+        if (!$subject instanceof Variable || !$this->isSupportedNullCheckChain($checkedExpressions)) {
+            return null;
+        }
+
+        $lastExpression = $checkedExpressions[array_key_last($checkedExpressions)];
+        $transformedCondition = $this->transformWholeChain($lastExpression, $subject);
+
+        if ($transformedCondition === null) {
+            return null;
+        }
+
+        $node->cond = new NotIdentical($transformedCondition, $this->nodeFactory->createNull());
+
+        return $node;
+    }
+
+    /**
+     * @return list<Expr>|null
+     */
+    private function extractCheckedExpressionsFromBooleanAnd(BooleanAnd $node): ?array
+    {
+        $expressions = [];
+
+        foreach ($this->flattenBooleanAnd($node) as $part) {
+            if (!$part instanceof NotIdentical) {
+                return null;
+            }
+
+            $checkedExpression = $this->extractSubjectFromNotNull($part);
+
+            if ($checkedExpression === null) {
+                return null;
+            }
+
+            $expressions[] = $checkedExpression;
+        }
+
+        return $expressions;
+    }
+
+    /**
+     * @return list<Expr>
+     */
+    private function flattenBooleanAnd(Expr $expr): array
+    {
+        if (!$expr instanceof BooleanAnd) {
+            return [$expr];
+        }
+
+        return [
+            ...$this->flattenBooleanAnd($expr->left),
+            ...$this->flattenBooleanAnd($expr->right),
+        ];
+    }
+
+    /**
+     * @param list<Expr> $checkedExpressions
+     */
+    private function isSupportedNullCheckChain(array $checkedExpressions): bool
+    {
+        for ($i = 1, $count = count($checkedExpressions); $i < $count; ++$i) {
+            if (!$this->isDirectChainStep($checkedExpressions[$i - 1], $checkedExpressions[$i])) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private function isDirectChainStep(Expr $previousExpression, Expr $currentExpression): bool
+    {
+        if (!$currentExpression instanceof MethodCall && !$currentExpression instanceof PropertyFetch) {
+            return false;
+        }
+
+        return $this->nodeComparator->areNodesEqual($currentExpression->var, $previousExpression);
+    }
+
+    private function transformWholeChain(Expr $expr, Variable $subject): ?Expr
+    {
+        if ($expr instanceof MethodCall) {
+            if ($this->nodeComparator->areNodesEqual($expr->var, $subject)) {
+                return new NullsafeMethodCall($expr->var, $expr->name, $expr->args);
+            }
+
+            $transformedVar = $this->transformWholeChain($expr->var, $subject);
+
+            if ($transformedVar === null) {
+                return null;
+            }
+
+            return new NullsafeMethodCall($transformedVar, $expr->name, $expr->args);
+        }
+
+        if ($expr instanceof PropertyFetch) {
+            if ($this->nodeComparator->areNodesEqual($expr->var, $subject)) {
+                return new NullsafePropertyFetch($expr->var, $expr->name);
+            }
+
+            $transformedVar = $this->transformWholeChain($expr->var, $subject);
+
+            if ($transformedVar === null) {
+                return null;
+            }
+
+            return new NullsafePropertyFetch($transformedVar, $expr->name);
+        }
+
+        return null;
     }
 }
