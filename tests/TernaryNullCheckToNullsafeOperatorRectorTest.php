@@ -230,6 +230,128 @@ final class TernaryNullCheckToNullsafeOperatorRectorTest extends AbstractRuleTes
             $city = $user?->getAddress()->getCity();
             PHP,
         ];
+
+        yield 'implicit null check ternary' => [
+            <<<'PHP'
+            <?php
+
+            $name = $user ? $user->getName() : null;
+            PHP,
+            <<<'PHP'
+            <?php
+
+            $name = $user?->getName();
+            PHP,
+        ];
+
+        yield 'implicit null check ternary with property chain' => [
+            <<<'PHP'
+            <?php
+
+            $name = $user ? $user->city->country->name : null;
+            PHP,
+            <<<'PHP'
+            <?php
+
+            $name = $user?->city->country->name;
+            PHP,
+        ];
+
+        yield 'if condition property chain' => [
+            <<<'PHP'
+            <?php
+
+            $user = $this->getUser();
+
+            if (
+                $user !== null
+                && $user->city !== null
+                && $user->city->country !== null
+            ) {
+                echo $user->city->country->name;
+            }
+            PHP,
+            <<<'PHP'
+            <?php
+
+            $user = $this->getUser();
+
+            if (
+                $user?->city?->country !== null
+            ) {
+                echo $user->city->country->name;
+            }
+            PHP,
+        ];
+
+        yield 'if condition null on left side' => [
+            <<<'PHP'
+            <?php
+
+            if (
+                null !== $user
+                && null !== $user->city
+                && null !== $user->city->country
+            ) {
+                echo $user->city->country->name;
+            }
+            PHP,
+            <<<'PHP'
+            <?php
+
+            if (
+                $user?->city?->country !== null
+            ) {
+                echo $user->city->country->name;
+            }
+            PHP,
+        ];
+
+        yield 'if condition method chain' => [
+            <<<'PHP'
+            <?php
+
+            if (
+                $user !== null
+                && $user->getCity() !== null
+                && $user->getCity()->getCountry() !== null
+            ) {
+                echo $user->getCity()->getCountry()->getName();
+            }
+            PHP,
+            <<<'PHP'
+            <?php
+
+            if (
+                $user?->getCity()?->getCountry() !== null
+            ) {
+                echo $user->getCity()->getCountry()->getName();
+            }
+            PHP,
+        ];
+
+        yield 'if condition property and method chain' => [
+            <<<'PHP'
+            <?php
+
+            if (
+                $user !== null
+                && $user->city !== null
+                && $user->city->getCountry() !== null
+            ) {
+                echo $user->city->getCountry()->getName();
+            }
+            PHP,
+            <<<'PHP'
+            <?php
+
+            if (
+                $user?->city?->getCountry() !== null
+            ) {
+                echo $user->city->getCountry()->getName();
+            }
+            PHP,
+        ];
     }
 
     public static function provideUnchangedCases(): iterable
@@ -327,6 +449,78 @@ final class TernaryNullCheckToNullsafeOperatorRectorTest extends AbstractRuleTes
             <?php
 
             $name = $user !== null ? UserHelper::format($user) : null;
+            PHP,
+        ];
+
+        yield 'implicit null check ternary with non-null else branch' => [
+            <<<'PHP'
+            <?php
+
+            $name = $user ? $user->getName() : 'anonymous';
+            PHP,
+        ];
+
+        yield 'shorthand ternary is not transformed' => [
+            <<<'PHP'
+            <?php
+
+            $name = $user ?: null;
+            PHP,
+        ];
+
+        yield 'if condition with loose null checks' => [
+            <<<'PHP'
+            <?php
+
+            if (
+                $user != null
+                && $user->city != null
+                && $user->city->country != null
+            ) {
+                echo $user->city->country->name;
+            }
+            PHP,
+        ];
+
+        yield 'if condition with extra condition' => [
+            <<<'PHP'
+            <?php
+
+            if (
+                $user !== null
+                && $user->city !== null
+                && $active
+            ) {
+                echo $user->city->name;
+            }
+            PHP,
+        ];
+
+        yield 'if condition with broken chain' => [
+            <<<'PHP'
+            <?php
+
+            if (
+                $user !== null
+                && $user->city !== null
+                && $profile->country !== null
+            ) {
+                echo $profile->country->name;
+            }
+            PHP,
+        ];
+
+        yield 'if condition with non-variable subject' => [
+            <<<'PHP'
+            <?php
+
+            if (
+                $this->getUser() !== null
+                && $this->getUser()->city !== null
+                && $this->getUser()->city->country !== null
+            ) {
+                echo $this->getUser()->city->country->name;
+            }
             PHP,
         ];
     }
