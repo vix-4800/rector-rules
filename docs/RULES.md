@@ -83,9 +83,7 @@ final class PhoneNormalizer
 }
 ```
 
-Parameters:
-
-- `threshold` (int, default: `3`) — minimum number of repeated comparisons before the rule replaces them with `in_array()`. Set it to `2` to also convert two-value chains.
+Parameters: none.
 
 ## ExtractAssignmentFromIfConditionRector
 
