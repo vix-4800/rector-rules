@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Vix\RectorRules;
 
+use InvalidArgumentException;
 use PhpParser\Node;
 use PhpParser\Node\Arg;
 use PhpParser\Node\ArrayItem;
@@ -41,16 +42,13 @@ use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
  */
 final class ReplaceMultipleEqualWithInArrayRector extends AbstractRector implements ConfigurableRectorInterface
 {
-    public const THRESHOLD = 'threshold';
+    public const string THRESHOLD = 'threshold';
 
-    private const DEFAULT_THRESHOLD = 3;
+    private const int DEFAULT_THRESHOLD = 3;
 
     private int $threshold = self::DEFAULT_THRESHOLD;
 
-    /**
-     * @return RuleDefinition
-     */
-    public function getRuleDefinition(): RuleDefinition
+        public function getRuleDefinition(): RuleDefinition
     {
         return new RuleDefinition(
             'Replace repeated equality and inequality comparisons with in_array() calls',
@@ -108,7 +106,7 @@ final class ReplaceMultipleEqualWithInArrayRector extends AbstractRector impleme
             || !is_int($configuration[self::THRESHOLD])
             || $configuration[self::THRESHOLD] < 2
         ) {
-            throw new \InvalidArgumentException(sprintf(
+            throw new InvalidArgumentException(sprintf(
                 'Configuration "%s" must be an integer greater than or equal to 2.',
                 self::THRESHOLD
             ));
@@ -219,7 +217,7 @@ final class ReplaceMultipleEqualWithInArrayRector extends AbstractRector impleme
      */
     private function resolveSubjectAndValue(Node $comparison, ?Expr $knownSubject): ?array
     {
-        if ($knownSubject !== null) {
+        if ($knownSubject instanceof Expr) {
             if ($this->areNodesEqual($comparison->left, $knownSubject)) {
                 return [
                     'subject' => $comparison->left,
@@ -333,11 +331,11 @@ final class ReplaceMultipleEqualWithInArrayRector extends AbstractRector impleme
      */
     private function areNodesEqual(?Node $node1, ?Node $node2): bool
     {
-        if ($node1 === null && $node2 === null) {
+        if (!$node1 instanceof Node && !$node2 instanceof Node) {
             return true;
         }
 
-        if ($node1 === null || $node2 === null) {
+        if (!$node1 instanceof Node || !$node2 instanceof Node) {
             return false;
         }
 
