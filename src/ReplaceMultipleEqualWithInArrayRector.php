@@ -178,6 +178,10 @@ final class ReplaceMultipleEqualWithInArrayRector extends AbstractRector impleme
             $values[] = $pair['value'];
         }
 
+        if (!$firstSubject instanceof Expr) {
+            return null;
+        }
+
         $arrayItems = [];
 
         foreach ($values as $value) {
