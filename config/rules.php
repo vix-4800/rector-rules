@@ -8,6 +8,7 @@ use Vix\RectorRules\CollapseSequentialStrReplaceRector;
 use Vix\RectorRules\ExtractAssignmentFromIfConditionRector;
 use Vix\RectorRules\NullableBoolReturnToFalseRector;
 use Vix\RectorRules\ReplaceMultipleEqualWithInArrayRector;
+use Vix\RectorRules\TernaryNullCheckToNullsafeOperatorRector;
 use Vix\RectorRules\Yii2FindAllIdShortcutRector;
 use Vix\RectorRules\Yii2FindOneFindAllShortcutRector;
 use Vix\RectorRules\Yii2FindOneIdShortcutRector;
@@ -24,6 +25,7 @@ return static function (RectorConfig $rectorConfig): void {
         ExtractAssignmentFromIfConditionRector::class,
         NullableBoolReturnToFalseRector::class,
         ReplaceMultipleEqualWithInArrayRector::class,
+        TernaryNullCheckToNullsafeOperatorRector::class,
         Yii2FindAllIdShortcutRector::class,
         Yii2FindOneFindAllShortcutRector::class,
         Yii2FindOneIdShortcutRector::class,
