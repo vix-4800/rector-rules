@@ -4,18 +4,20 @@ declare(strict_types=1);
 
 namespace Vix\RectorRules\Tests;
 
-use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Test;
 use Vix\RectorRules\Yii2UseExistsInsteadOfCountRector;
 
 /**
  * @internal
  */
-#[CoversNothing]
+#[CoversClass(Yii2UseExistsInsteadOfCountRector::class)]
 final class Yii2UseExistsInsteadOfCountRectorTest extends AbstractRuleTestCase
 {
     #[DataProvider('provideReplacesCountComparisonsWithExistsCases')]
-    public function testReplacesCountComparisonsWithExists(string $input, string $expected): void
+    #[Test]
+    public function replacesCountComparisonsWithExists(string $input, string $expected): void
     {
         $this->doTestCode($input, $expected);
     }
@@ -77,7 +79,8 @@ final class Yii2UseExistsInsteadOfCountRectorTest extends AbstractRuleTestCase
     }
 
     #[DataProvider('provideSkipsUnsupportedCountComparisonsCases')]
-    public function testSkipsUnsupportedCountComparisons(string $input): void
+    #[Test]
+    public function skipsUnsupportedCountComparisons(string $input): void
     {
         $this->doTestCode($input);
     }

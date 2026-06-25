@@ -4,18 +4,20 @@ declare(strict_types=1);
 
 namespace Vix\RectorRules\Tests;
 
-use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Test;
 use Vix\RectorRules\AddTypedClassConstantRector;
 
 /**
  * @internal
  */
-#[CoversNothing]
+#[CoversClass(AddTypedClassConstantRector::class)]
 final class AddTypedClassConstantRectorTest extends AbstractRuleTestCase
 {
     #[DataProvider('provideAddsInferredTypeCases')]
-    public function testAddsInferredType(string $input, string $expected): void
+    #[Test]
+    public function addsInferredType(string $input, string $expected): void
     {
         $this->doTestCode($input, $expected);
     }
@@ -74,7 +76,8 @@ final class AddTypedClassConstantRectorTest extends AbstractRuleTestCase
     }
 
     #[DataProvider('provideSkipsUnsafeCasesCases')]
-    public function testSkipsUnsafeCases(string $input): void
+    #[Test]
+    public function skipsUnsafeCases(string $input): void
     {
         $this->doTestCode($input);
     }

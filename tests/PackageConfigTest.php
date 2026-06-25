@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Vix\RectorRules\Tests;
 
 use Closure;
-use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use Vix\RectorRules\AddTypedClassConstantRector;
@@ -13,7 +13,7 @@ use Vix\RectorRules\AddTypedClassConstantRector;
 /**
  * @internal
  */
-#[CoversNothing]
+#[CoversClass(AddTypedClassConstantRector::class)]
 final class PackageConfigTest extends TestCase
 {
     #[Test]

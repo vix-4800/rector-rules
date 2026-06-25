@@ -4,18 +4,20 @@ declare(strict_types=1);
 
 namespace Vix\RectorRules\Tests;
 
-use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Test;
 use Vix\RectorRules\Yii2UseExistsInsteadOfOneNotNullRector;
 
 /**
  * @internal
  */
-#[CoversNothing]
+#[CoversClass(Yii2UseExistsInsteadOfOneNotNullRector::class)]
 final class Yii2UseExistsInsteadOfOneNotNullRectorTest extends AbstractRuleTestCase
 {
     #[DataProvider('provideReplacesOneNullComparisonsWithExistsCases')]
-    public function testReplacesOneNullComparisonsWithExists(string $input, string $expected): void
+    #[Test]
+    public function replacesOneNullComparisonsWithExists(string $input, string $expected): void
     {
         $this->doTestCode($input, $expected);
     }
@@ -54,7 +56,8 @@ final class Yii2UseExistsInsteadOfOneNotNullRectorTest extends AbstractRuleTestC
     }
 
     #[DataProvider('provideSkipsOtherComparisonsCases')]
-    public function testSkipsOtherComparisons(string $input): void
+    #[Test]
+    public function skipsOtherComparisons(string $input): void
     {
         $this->doTestCode($input);
     }

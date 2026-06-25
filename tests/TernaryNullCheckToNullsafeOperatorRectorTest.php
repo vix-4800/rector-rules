@@ -4,18 +4,20 @@ declare(strict_types=1);
 
 namespace Vix\RectorRules\Tests;
 
-use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Test;
 use Vix\RectorRules\TernaryNullCheckToNullsafeOperatorRector;
 
 /**
  * @internal
  */
-#[CoversNothing]
+#[CoversClass(TernaryNullCheckToNullsafeOperatorRector::class)]
 final class TernaryNullCheckToNullsafeOperatorRectorTest extends AbstractRuleTestCase
 {
     #[DataProvider('provideReplacesNullCheckTernaryWithNullsafeOperatorCases')]
-    public function testReplacesNullCheckTernaryWithNullsafeOperator(string $input, string $expected): void
+    #[Test]
+    public function replacesNullCheckTernaryWithNullsafeOperator(string $input, string $expected): void
     {
         $this->doTestCode($input, $expected);
     }
@@ -349,7 +351,8 @@ final class TernaryNullCheckToNullsafeOperatorRectorTest extends AbstractRuleTes
     }
 
     #[DataProvider('provideSkipsUnsupportedPatternsCases')]
-    public function testSkipsUnsupportedPatterns(string $input): void
+    #[Test]
+    public function skipsUnsupportedPatterns(string $input): void
     {
         $this->doTestCode($input);
     }

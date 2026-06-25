@@ -4,18 +4,20 @@ declare(strict_types=1);
 
 namespace Vix\RectorRules\Tests;
 
-use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Test;
 use Vix\RectorRules\Yii2PropertyAccessRector;
 
 /**
  * @internal
  */
-#[CoversNothing]
+#[CoversClass(Yii2PropertyAccessRector::class)]
 final class Yii2PropertyAccessRectorTest extends AbstractRuleTestCase
 {
     #[DataProvider('provideChangesYiiUserGetterToPropertyCases')]
-    public function testChangesYiiUserGetterToProperty(string $input, string $expected): void
+    #[Test]
+    public function changesYiiUserGetterToProperty(string $input, string $expected): void
     {
         $this->doTestCode($input, $expected);
     }
@@ -76,7 +78,8 @@ final class Yii2PropertyAccessRectorTest extends AbstractRuleTestCase
     }
 
     #[DataProvider('provideSkipsNonYiiUserGettersCases')]
-    public function testSkipsNonYiiUserGetters(string $input): void
+    #[Test]
+    public function skipsNonYiiUserGetters(string $input): void
     {
         $this->doTestCode($input);
     }

@@ -4,18 +4,20 @@ declare(strict_types=1);
 
 namespace Vix\RectorRules\Tests;
 
-use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Test;
 use Vix\RectorRules\ReplaceMultipleEqualWithInArrayRector;
 
 /**
  * @internal
  */
-#[CoversNothing]
+#[CoversClass(ReplaceMultipleEqualWithInArrayRector::class)]
 final class ReplaceMultipleEqualWithInArrayCustomThresholdRectorTest extends AbstractRuleTestCase
 {
     #[DataProvider('provideReplacesComparisonsWhenCustomThresholdIsMetCases')]
-    public function testReplacesComparisonsWhenCustomThresholdIsMet(string $input, string $expected): void
+    #[Test]
+    public function replacesComparisonsWhenCustomThresholdIsMet(string $input, string $expected): void
     {
         $this->doTestCode($input, $expected);
     }

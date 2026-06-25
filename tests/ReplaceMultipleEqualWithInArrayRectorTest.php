@@ -4,18 +4,20 @@ declare(strict_types=1);
 
 namespace Vix\RectorRules\Tests;
 
-use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Test;
 use Vix\RectorRules\ReplaceMultipleEqualWithInArrayRector;
 
 /**
  * @internal
  */
-#[CoversNothing]
+#[CoversClass(ReplaceMultipleEqualWithInArrayRector::class)]
 final class ReplaceMultipleEqualWithInArrayRectorTest extends AbstractRuleTestCase
 {
     #[DataProvider('provideReplacesRepeatedComparisonsWithInArrayCases')]
-    public function testReplacesRepeatedComparisonsWithInArray(string $input, string $expected): void
+    #[Test]
+    public function replacesRepeatedComparisonsWithInArray(string $input, string $expected): void
     {
         $this->doTestCode($input, $expected);
     }
@@ -92,7 +94,8 @@ final class ReplaceMultipleEqualWithInArrayRectorTest extends AbstractRuleTestCa
     }
 
     #[DataProvider('provideSkipsUnsupportedComparisonChainsCases')]
-    public function testSkipsUnsupportedComparisonChains(string $input): void
+    #[Test]
+    public function skipsUnsupportedComparisonChains(string $input): void
     {
         $this->doTestCode($input);
     }

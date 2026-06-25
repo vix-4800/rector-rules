@@ -4,18 +4,20 @@ declare(strict_types=1);
 
 namespace Vix\RectorRules\Tests;
 
-use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Test;
 use Vix\RectorRules\Yii2FindAllIdShortcutRector;
 
 /**
  * @internal
  */
-#[CoversNothing]
+#[CoversClass(Yii2FindAllIdShortcutRector::class)]
 final class Yii2FindAllIdShortcutRectorTest extends AbstractRuleTestCase
 {
     #[DataProvider('provideReplacesSingleIdArrayWithScalarCases')]
-    public function testReplacesSingleIdArrayWithScalar(string $input, string $expected): void
+    #[Test]
+    public function replacesSingleIdArrayWithScalar(string $input, string $expected): void
     {
         $this->doTestCode($input, $expected);
     }
@@ -50,7 +52,8 @@ final class Yii2FindAllIdShortcutRectorTest extends AbstractRuleTestCase
     }
 
     #[DataProvider('provideSkipsNonSingleIdArrayCases')]
-    public function testSkipsNonSingleIdArray(string $input): void
+    #[Test]
+    public function skipsNonSingleIdArray(string $input): void
     {
         $this->doTestCode($input);
     }

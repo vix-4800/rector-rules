@@ -4,18 +4,20 @@ declare(strict_types=1);
 
 namespace Vix\RectorRules\Tests;
 
-use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Test;
 use Vix\RectorRules\CollapseSequentialStrReplaceRector;
 
 /**
  * @internal
  */
-#[CoversNothing]
+#[CoversClass(CollapseSequentialStrReplaceRector::class)]
 final class CollapseSequentialStrReplaceRectorTest extends AbstractRuleTestCase
 {
     #[DataProvider('provideCollapsesSequentialStrReplaceCallsCases')]
-    public function testCollapsesSequentialStrReplaceCalls(string $input, string $expected): void
+    #[Test]
+    public function collapsesSequentialStrReplaceCalls(string $input, string $expected): void
     {
         $this->doTestCode($input, $expected);
     }
@@ -101,7 +103,8 @@ final class CollapseSequentialStrReplaceRectorTest extends AbstractRuleTestCase
     }
 
     #[DataProvider('provideSkipsUnsafeStrReplaceChainsCases')]
-    public function testSkipsUnsafeStrReplaceChains(string $input): void
+    #[Test]
+    public function skipsUnsafeStrReplaceChains(string $input): void
     {
         $this->doTestCode($input);
     }

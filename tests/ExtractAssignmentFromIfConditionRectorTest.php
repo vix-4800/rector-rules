@@ -4,18 +4,20 @@ declare(strict_types=1);
 
 namespace Vix\RectorRules\Tests;
 
-use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Test;
 use Vix\RectorRules\ExtractAssignmentFromIfConditionRector;
 
 /**
  * @internal
  */
-#[CoversNothing]
+#[CoversClass(ExtractAssignmentFromIfConditionRector::class)]
 final class ExtractAssignmentFromIfConditionRectorTest extends AbstractRuleTestCase
 {
     #[DataProvider('provideExtractsAssignmentsFromIfConditionsCases')]
-    public function testExtractsAssignmentsFromIfConditions(string $input, string $expected): void
+    #[Test]
+    public function extractsAssignmentsFromIfConditions(string $input, string $expected): void
     {
         $this->doTestCode($input, $expected);
     }
@@ -170,7 +172,8 @@ final class ExtractAssignmentFromIfConditionRectorTest extends AbstractRuleTestC
     }
 
     #[DataProvider('provideSkipsUnsupportedAssignmentsCases')]
-    public function testSkipsUnsupportedAssignments(string $input): void
+    #[Test]
+    public function skipsUnsupportedAssignments(string $input): void
     {
         $this->doTestCode($input);
     }

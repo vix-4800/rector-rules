@@ -4,18 +4,20 @@ declare(strict_types=1);
 
 namespace Vix\RectorRules\Tests;
 
-use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Test;
 use Vix\RectorRules\NullableBoolReturnToFalseRector;
 
 /**
  * @internal
  */
-#[CoversNothing]
+#[CoversClass(NullableBoolReturnToFalseRector::class)]
 final class NullableBoolReturnToFalseRectorTest extends AbstractRuleTestCase
 {
     #[DataProvider('provideChangesNullableBoolReturnToFalseCases')]
-    public function testChangesNullableBoolReturnToFalse(string $input, string $expected): void
+    #[Test]
+    public function changesNullableBoolReturnToFalse(string $input, string $expected): void
     {
         $this->doTestCode($input, $expected);
     }
@@ -106,7 +108,8 @@ final class NullableBoolReturnToFalseRectorTest extends AbstractRuleTestCase
     }
 
     #[DataProvider('provideSkipsNonNullableBoolReturnsCases')]
-    public function testSkipsNonNullableBoolReturns(string $input): void
+    #[Test]
+    public function skipsNonNullableBoolReturns(string $input): void
     {
         $this->doTestCode($input);
     }

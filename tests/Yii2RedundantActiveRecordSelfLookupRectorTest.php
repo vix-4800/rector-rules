@@ -4,18 +4,20 @@ declare(strict_types=1);
 
 namespace Vix\RectorRules\Tests;
 
-use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Test;
 use Vix\RectorRules\Yii2RedundantActiveRecordSelfLookupRector;
 
 /**
  * @internal
  */
-#[CoversNothing]
+#[CoversClass(Yii2RedundantActiveRecordSelfLookupRector::class)]
 final class Yii2RedundantActiveRecordSelfLookupRectorTest extends AbstractRuleTestCase
 {
     #[DataProvider('provideReplacesRedundantSelfLookupCases')]
-    public function testReplacesRedundantSelfLookup(string $input, string $expected): void
+    #[Test]
+    public function replacesRedundantSelfLookup(string $input, string $expected): void
     {
         $this->doTestCode($input, $expected);
     }
@@ -177,7 +179,8 @@ final class Yii2RedundantActiveRecordSelfLookupRectorTest extends AbstractRuleTe
     }
 
     #[DataProvider('provideSkipsNonCurrentModelLookupCases')]
-    public function testSkipsNonCurrentModelLookup(string $input): void
+    #[Test]
+    public function skipsNonCurrentModelLookup(string $input): void
     {
         $this->doTestCode($input);
     }

@@ -4,18 +4,20 @@ declare(strict_types=1);
 
 namespace Vix\RectorRules\Tests;
 
-use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Test;
 use Vix\RectorRules\Yii2UserFindOneToIdentityRector;
 
 /**
  * @internal
  */
-#[CoversNothing]
+#[CoversClass(Yii2UserFindOneToIdentityRector::class)]
 final class Yii2UserFindOneToIdentityRectorTest extends AbstractRuleTestCase
 {
     #[DataProvider('provideReplacesCurrentUserFindOneWithIdentityCases')]
-    public function testReplacesCurrentUserFindOneWithIdentity(string $input, string $expected): void
+    #[Test]
+    public function replacesCurrentUserFindOneWithIdentity(string $input, string $expected): void
     {
         $this->doTestCode($input, $expected);
     }
@@ -63,7 +65,8 @@ final class Yii2UserFindOneToIdentityRectorTest extends AbstractRuleTestCase
     }
 
     #[DataProvider('provideSkipsOtherFindOneCallsCases')]
-    public function testSkipsOtherFindOneCalls(string $input): void
+    #[Test]
+    public function skipsOtherFindOneCalls(string $input): void
     {
         $this->doTestCode($input);
     }

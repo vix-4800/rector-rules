@@ -4,18 +4,20 @@ declare(strict_types=1);
 
 namespace Vix\RectorRules\Tests;
 
-use PHPUnit\Framework\Attributes\CoversNothing;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Test;
 use Vix\RectorRules\Yii2FindOneFindAllShortcutRector;
 
 /**
  * @internal
  */
-#[CoversNothing]
+#[CoversClass(Yii2FindOneFindAllShortcutRector::class)]
 final class Yii2FindOneFindAllShortcutRectorTest extends AbstractRuleTestCase
 {
     #[DataProvider('provideReplacesFindWhereTerminalCallCases')]
-    public function testReplacesFindWhereTerminalCall(string $input, string $expected): void
+    #[Test]
+    public function replacesFindWhereTerminalCall(string $input, string $expected): void
     {
         $this->doTestCode($input, $expected);
     }
@@ -76,7 +78,8 @@ final class Yii2FindOneFindAllShortcutRectorTest extends AbstractRuleTestCase
     }
 
     #[DataProvider('provideSkipsUnsafeChainsCases')]
-    public function testSkipsUnsafeChains(string $input): void
+    #[Test]
+    public function skipsUnsafeChains(string $input): void
     {
         $this->doTestCode($input);
     }
