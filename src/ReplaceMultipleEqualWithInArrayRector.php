@@ -91,7 +91,7 @@ final class ReplaceMultipleEqualWithInArrayRector extends AbstractRector impleme
     }
 
     /**
-     * @param list<mixed> $configuration
+     * @param array<string, mixed> $configuration
      */
     public function configure(array $configuration): void
     {
