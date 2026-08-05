@@ -12,6 +12,7 @@ use Vix\RectorRules\LegacyRector\ReplaceTestFunctionPrefixWithAttributeRector;
 use Vix\RectorRules\NullableBoolReturnToFalseRector;
 use Vix\RectorRules\ReplaceMultipleEqualWithInArrayRector;
 use Vix\RectorRules\TernaryNullCheckToNullsafeOperatorRector;
+use Vix\RectorRules\Yii2\Yii2AddRelationQueryGenericRector;
 use Vix\RectorRules\Yii2\Yii2FindAllIdShortcutRector;
 use Vix\RectorRules\Yii2\Yii2FindOneFindAllShortcutRector;
 use Vix\RectorRules\Yii2\Yii2FindOneIdShortcutRector;
@@ -32,6 +33,7 @@ return static function (RectorConfig $rectorConfig): void {
         ReplaceMultipleEqualWithInArrayRector::class,
         ReplaceTestFunctionPrefixWithAttributeRector::class,
         TernaryNullCheckToNullsafeOperatorRector::class,
+        Yii2AddRelationQueryGenericRector::class,
         Yii2FindAllIdShortcutRector::class,
         Yii2FindOneFindAllShortcutRector::class,
         Yii2FindOneIdShortcutRector::class,

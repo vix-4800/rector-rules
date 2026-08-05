@@ -18,6 +18,7 @@ All current rules are parameterless. If a rule becomes configurable in the futur
   - [NullableBoolReturnToFalseRector](#nullableboolreturntofalserector)
   - [ReplaceMultipleEqualWithInArrayRector](#replacemultipleequalwithinarrayrector)
   - [Yii2](#yii2)
+    - [Yii2AddRelationQueryGenericRector](#yii2addrelationquerygenericrector)
     - [Yii2FindAllIdShortcutRector](#yii2findallidshortcutrector)
     - [Yii2FindOneFindAllShortcutRector](#yii2findonefindallshortcutrector)
     - [Yii2FindOneIdShortcutRector](#yii2findoneidshortcutrector)
@@ -248,6 +249,56 @@ Parameters:
 - `threshold` (int, default: `3`) — minimum number of repeated comparisons before the rule replaces them with `in_array()`. Set it to `2` to also convert two-value chains.
 
 ## Yii2
+
+### Yii2AddRelationQueryGenericRector
+
+Adds the related model type to an `ActiveQuery` return annotation for direct Yii2 `hasOne()` and `hasMany()` relations. The method must return `yii\db\ActiveQuery`, have an exact `@return ActiveQuery` annotation, and contain a single direct relation return using `Model::class`. Existing generics, dynamic model classes, and other query types are unchanged.
+
+**Before**
+
+```php
+use yii\db\ActiveQuery;
+
+/**
+ * @return ActiveQuery Query for the book author.
+ */
+public function getAuthor(): ActiveQuery
+{
+    return $this->hasOne(Author::class, ['id' => 'author_id']);
+}
+
+/**
+ * @return ActiveQuery
+ */
+public function getBooks(): ActiveQuery
+{
+    return $this->hasMany(Book::class, ['author_id' => 'id']);
+}
+```
+
+**After**
+
+```php
+use yii\db\ActiveQuery;
+
+/**
+ * @return ActiveQuery<Author> Query for the book author.
+ */
+public function getAuthor(): ActiveQuery
+{
+    return $this->hasOne(Author::class, ['id' => 'author_id']);
+}
+
+/**
+ * @return ActiveQuery<Book>
+ */
+public function getBooks(): ActiveQuery
+{
+    return $this->hasMany(Book::class, ['author_id' => 'id']);
+}
+```
+
+Parameters: none.
 
 ### Yii2FindAllIdShortcutRector
 
