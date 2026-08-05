@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Vix\RectorRules;
+namespace Vix\RectorRules\Yii2;
 
 use PhpParser\Node;
 use PhpParser\Node\Expr\BinaryOp\Identical;

@@ -7,7 +7,7 @@ namespace Vix\RectorRules\Tests;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
-use Vix\RectorRules\Yii2FindOneIdShortcutRector;
+use Vix\RectorRules\Yii2\Yii2FindOneIdShortcutRector;
 
 /**
  * @internal
