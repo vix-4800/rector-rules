@@ -11,6 +11,8 @@ All current rules are parameterless. If a rule becomes configurable in the futur
   - [AddTypedClassConstantRector](#addtypedclassconstantrector)
   - [CollapseSequentialStrReplaceRector](#collapsesequentialstrreplacerector)
   - [ExtractAssignmentFromIfConditionRector](#extractassignmentfromifconditionrector)
+  - [Legacy Rector](#legacy-rector)
+    - [CountArrayToEmptyArrayComparisonRector](#countarraytoemptyarraycomparisonrector)
   - [NullableBoolReturnToFalseRector](#nullableboolreturntofalserector)
   - [ReplaceMultipleEqualWithInArrayRector](#replacemultipleequalwithinarrayrector)
   - [Yii2](#yii2)
@@ -104,6 +106,35 @@ $model = User::findOne($id);
 if ($model !== null) {
     return $model;
 }
+```
+
+Parameters: none.
+
+## Legacy Rector
+
+### CountArrayToEmptyArrayComparisonRector
+
+Replaces supported `count()` checks on expressions with a native `array` type by comparison with `[]`. It supports zero comparisons and `if`/`elseif` truthiness checks, while leaving `Countable` objects and `while` conditions unchanged.
+
+**Before**
+
+```php
+function hasItems(array $items): bool
+{
+    return count($items) > 0;
+}
+```
+
+**After**
+
+```php
+function hasItems(array $items): bool
+{
+    return $items !== [];
+}
+```
+
+Parameters: none.
 ```
 
 Parameters: none.

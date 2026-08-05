@@ -6,6 +6,7 @@ use Rector\Config\RectorConfig;
 use Vix\RectorRules\AddTypedClassConstantRector;
 use Vix\RectorRules\CollapseSequentialStrReplaceRector;
 use Vix\RectorRules\ExtractAssignmentFromIfConditionRector;
+use Vix\RectorRules\LegacyRector\CountArrayToEmptyArrayComparisonRector;
 use Vix\RectorRules\NullableBoolReturnToFalseRector;
 use Vix\RectorRules\ReplaceMultipleEqualWithInArrayRector;
 use Vix\RectorRules\TernaryNullCheckToNullsafeOperatorRector;
@@ -22,6 +23,7 @@ return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->rules([
         AddTypedClassConstantRector::class,
         CollapseSequentialStrReplaceRector::class,
+        CountArrayToEmptyArrayComparisonRector::class,
         ExtractAssignmentFromIfConditionRector::class,
         NullableBoolReturnToFalseRector::class,
         ReplaceMultipleEqualWithInArrayRector::class,
