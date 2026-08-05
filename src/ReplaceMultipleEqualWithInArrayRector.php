@@ -48,7 +48,7 @@ final class ReplaceMultipleEqualWithInArrayRector extends AbstractRector impleme
 
     private int $threshold = self::DEFAULT_THRESHOLD;
 
-        public function getRuleDefinition(): RuleDefinition
+    public function getRuleDefinition(): RuleDefinition
     {
         return new RuleDefinition(
             'Replace repeated equality and inequality comparisons with in_array() calls',
@@ -91,7 +91,7 @@ final class ReplaceMultipleEqualWithInArrayRector extends AbstractRector impleme
     }
 
     /**
-     * @param mixed[] $configuration
+     * @param list<mixed> $configuration
      */
     public function configure(array $configuration): void
     {
