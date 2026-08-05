@@ -13,6 +13,7 @@ All current rules are parameterless. If a rule becomes configurable in the futur
   - [ExtractAssignmentFromIfConditionRector](#extractassignmentfromifconditionrector)
   - [Legacy Rector](#legacy-rector)
     - [CountArrayToEmptyArrayComparisonRector](#countarraytoemptyarraycomparisonrector)
+    - [NestedTernaryToMatchRector](#nestedternarytomatchrector)
   - [NullableBoolReturnToFalseRector](#nullableboolreturntofalserector)
   - [ReplaceMultipleEqualWithInArrayRector](#replacemultipleequalwithinarrayrector)
   - [Yii2](#yii2)
@@ -132,6 +133,28 @@ function hasItems(array $items): bool
 {
     return $items !== [];
 }
+```
+
+Parameters: none.
+
+### NestedTernaryToMatchRector
+
+Converts a nested long ternary assigned to a variable into `match`. When every condition is a strict comparison of the same variable, the variable becomes the match subject; otherwise the rule emits `match (true)` only for native boolean conditions. Short ternaries and non-boolean truthiness checks are skipped.
+
+**Before**
+
+```php
+$result = $status === 'active' ? 'enabled' : ($status === 'disabled' ? 'off' : 'unknown');
+```
+
+**After**
+
+```php
+$result = match ($status) {
+    'active' => 'enabled',
+    'disabled' => 'off',
+    default => 'unknown',
+};
 ```
 
 Parameters: none.
