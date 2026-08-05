@@ -14,6 +14,7 @@ All current rules are parameterless. If a rule becomes configurable in the futur
   - [Legacy Rector](#legacy-rector)
     - [CountArrayToEmptyArrayComparisonRector](#countarraytoemptyarraycomparisonrector)
     - [NestedTernaryToMatchRector](#nestedternarytomatchrector)
+    - [ReplaceTestFunctionPrefixWithAttributeRector](#replacetestfunctionprefixwithattributerector)
   - [NullableBoolReturnToFalseRector](#nullableboolreturntofalserector)
   - [ReplaceMultipleEqualWithInArrayRector](#replacemultipleequalwithinarrayrector)
   - [Yii2](#yii2)
@@ -158,6 +159,34 @@ $result = match ($status) {
 ```
 
 Parameters: none.
+
+### ReplaceTestFunctionPrefixWithAttributeRector
+
+Adds PHPUnit's `#[Test]` attribute to public test-prefixed methods in PHPUnit test classes and removes the `test` or `test_` prefix. Methods named exactly `test` or `test_`, non-public helpers, and methods that already have the attribute keep their names unchanged.
+
+**Before**
+
+```php
+final class CalculatorTest extends \PHPUnit\Framework\TestCase
+{
+    public function testOnePlusOneShouldBeTwo(): void
+    {
+        $this->assertSame(2, 1 + 1);
+    }
+}
+```
+
+**After**
+
+```php
+final class CalculatorTest extends \PHPUnit\Framework\TestCase
+{
+    #[\PHPUnit\Framework\Attributes\Test]
+    public function onePlusOneShouldBeTwo(): void
+    {
+        $this->assertSame(2, 1 + 1);
+    }
+}
 ```
 
 Parameters: none.

@@ -8,6 +8,7 @@ use Vix\RectorRules\CollapseSequentialStrReplaceRector;
 use Vix\RectorRules\ExtractAssignmentFromIfConditionRector;
 use Vix\RectorRules\LegacyRector\CountArrayToEmptyArrayComparisonRector;
 use Vix\RectorRules\LegacyRector\NestedTernaryToMatchRector;
+use Vix\RectorRules\LegacyRector\ReplaceTestFunctionPrefixWithAttributeRector;
 use Vix\RectorRules\NullableBoolReturnToFalseRector;
 use Vix\RectorRules\ReplaceMultipleEqualWithInArrayRector;
 use Vix\RectorRules\TernaryNullCheckToNullsafeOperatorRector;
@@ -29,6 +30,7 @@ return static function (RectorConfig $rectorConfig): void {
         NestedTernaryToMatchRector::class,
         NullableBoolReturnToFalseRector::class,
         ReplaceMultipleEqualWithInArrayRector::class,
+        ReplaceTestFunctionPrefixWithAttributeRector::class,
         TernaryNullCheckToNullsafeOperatorRector::class,
         Yii2FindAllIdShortcutRector::class,
         Yii2FindOneFindAllShortcutRector::class,
