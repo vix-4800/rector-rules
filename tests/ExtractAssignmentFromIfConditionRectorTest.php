@@ -114,6 +114,24 @@ final class ExtractAssignmentFromIfConditionRectorTest extends AbstractRuleTestC
                 PHP,
         ];
 
+        yield 'empty condition with assignment' => [
+            <<<'PHP'
+                <?php
+
+                if (empty($cached = $cache->get($key))) {
+                    return null;
+                }
+                PHP,
+            <<<'PHP'
+                <?php
+
+                $cached = $cache->get($key);
+                if (empty($cached)) {
+                    return null;
+                }
+                PHP,
+        ];
+
         yield 'negated supported function condition' => [
             <<<'PHP'
                 <?php

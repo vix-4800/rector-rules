@@ -16,6 +16,7 @@ use PhpParser\Node\Expr\BinaryOp\Identical;
 use PhpParser\Node\Expr\BinaryOp\NotEqual;
 use PhpParser\Node\Expr\BinaryOp\NotIdentical;
 use PhpParser\Node\Expr\BooleanNot;
+use PhpParser\Node\Expr\Empty_;
 use PhpParser\Node\Expr\FuncCall;
 use PhpParser\Node\Expr\List_;
 use PhpParser\Node\Expr\PropertyFetch;
@@ -131,6 +132,10 @@ if ($obj) {
             return $this->handleBooleanNotCondition($node, $condition);
         }
 
+        if ($condition instanceof Empty_) {
+            return $this->handleEmptyCondition($node, $condition);
+        }
+
         if ($condition instanceof FuncCall) {
             return $this->handleFuncCallCondition($node, $condition);
         }
@@ -157,6 +162,33 @@ if ($obj) {
 
         return [
             new Expression($assignment),
+            $newIf,
+        ];
+    }
+
+    /**
+     * @param If_   $node
+     * @param Empty_ $empty
+     *
+     * @return list<Node>|null
+     */
+    private function handleEmptyCondition(If_ $node, Empty_ $empty): ?array
+    {
+        if (!$empty->expr instanceof Assign) {
+            return null;
+        }
+
+        $replacement = $this->createConditionReplacement($empty->expr);
+
+        if ($replacement === null) {
+            return null;
+        }
+
+        $newIf = clone $node;
+        $newIf->cond = new Empty_($replacement);
+
+        return [
+            new Expression($empty->expr),
             $newIf,
         ];
     }
