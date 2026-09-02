@@ -2,7 +2,7 @@
 
 Detailed documentation for every Rector rule shipped by this package.
 
-All current rules are parameterless. If a rule becomes configurable in the future, its parameters should be documented in its section.
+Each configurable rule documents its parameters in its section.
 
 ## Table of Contents
 
@@ -19,6 +19,7 @@ All current rules are parameterless. If a rule becomes configurable in the futur
   - [ReplaceMultipleEqualWithInArrayRector](#replacemultipleequalwithinarrayrector)
   - [Yii2](#yii2)
     - [Yii2AddRelationQueryGenericRector](#yii2addrelationquerygenericrector)
+    - [Yii2AddPropertyTagsRector](#yii2addpropertytagsrector)
     - [Yii2FindAllIdShortcutRector](#yii2findallidshortcutrector)
     - [Yii2FindOneFindAllShortcutRector](#yii2findonefindallshortcutrector)
     - [Yii2FindOneIdShortcutRector](#yii2findoneidshortcutrector)
@@ -299,6 +300,72 @@ public function getBooks(): ActiveQuery
 ```
 
 Parameters: none.
+
+### Yii2AddPropertyTagsRector
+
+Adds missing `@property`, `@property-read`, and `@property-write` tags for public Yii2 magic accessors declared by a `yii\base\BaseObject` subclass. Types come from method PHPDoc or native signatures. For `yii\db\BaseActiveRecord`, direct `hasOne()` getters become nullable related-model properties and `hasMany()` getters become related-model arrays. Classes with custom `__get()` or `__set()` implementations are skipped.
+
+**Before**
+
+```php
+final class Settings extends \yii\base\BaseObject
+{
+    public function getName(): string
+    {
+        return '';
+    }
+
+    public function setName(string $name): void
+    {
+    }
+
+    public function getCount(): int
+    {
+        return 0;
+    }
+}
+```
+
+**After**
+
+```php
+/**
+ * @property string $name
+ * @property-read int $count
+ */
+final class Settings extends \yii\base\BaseObject
+{
+    public function getName(): string
+    {
+        return '';
+    }
+
+    public function setName(string $name): void
+    {
+    }
+
+    public function getCount(): int
+    {
+        return 0;
+    }
+}
+```
+
+Parameters:
+
+- `refine_property_tag_kinds` (bool, default: `false`) — replaces existing `@property` tags with `@property-read` or `@property-write` when only one accessor exists. Tags with both accessors remain `@property`.
+- `remove_unresolved_property_tags` (bool, default: `false`) — removes property tags for names with no matching accessor or supported ActiveRecord relation getter.
+
+```php
+use Rector\Config\RectorConfig;
+use Vix\RectorRules\Yii2\Yii2AddPropertyTagsRector;
+
+return RectorConfig::configure()
+    ->withConfiguredRule(Yii2AddPropertyTagsRector::class, [
+        Yii2AddPropertyTagsRector::REFINE_PROPERTY_TAG_KINDS => true,
+        Yii2AddPropertyTagsRector::REMOVE_UNRESOLVED_PROPERTY_TAGS => true,
+    ]);
+```
 
 ### Yii2FindAllIdShortcutRector
 

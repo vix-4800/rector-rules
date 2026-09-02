@@ -5,13 +5,8 @@ declare(strict_types=1);
 namespace Vix\RectorRules\Yii2;
 
 use PhpParser\Node;
-use PhpParser\Node\Arg;
-use PhpParser\Node\Expr\ClassConstFetch;
-use PhpParser\Node\Expr\MethodCall;
-use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Name;
 use PhpParser\Node\Stmt\ClassMethod;
-use PhpParser\Node\Stmt\Return_;
 use PHPStan\PhpDocParser\Ast\PhpDoc\ReturnTagValueNode;
 use PHPStan\PhpDocParser\Ast\Type\GenericTypeNode;
 use PHPStan\PhpDocParser\Ast\Type\IdentifierTypeNode;
@@ -26,6 +21,7 @@ final class Yii2AddRelationQueryGenericRector extends AbstractRector
     public function __construct(
         private readonly PhpDocInfoFactory $phpDocInfoFactory,
         private readonly PhpDocTypeChanger $phpDocTypeChanger,
+        private readonly RelationCallResolver $relationCallResolver,
     ) {
 
     }
@@ -88,9 +84,9 @@ final class Yii2AddRelationQueryGenericRector extends AbstractRector
             return null;
         }
 
-        $relatedModelName = $this->resolveRelatedModelName($node);
+        $relation = $this->relationCallResolver->resolve($node);
 
-        if ($relatedModelName === null) {
+        if ($relation === null) {
             return null;
         }
 
@@ -99,43 +95,10 @@ final class Yii2AddRelationQueryGenericRector extends AbstractRector
             $phpDocInfo,
             new GenericTypeNode(
                 new IdentifierTypeNode('ActiveQuery'),
-                [new IdentifierTypeNode($relatedModelName)],
+                [new IdentifierTypeNode($relation['relatedClass']->toString())],
             ),
         );
 
         return $node;
-    }
-
-    private function resolveRelatedModelName(ClassMethod $classMethod): ?string
-    {
-        $statements = $classMethod->stmts;
-
-        if ($statements === null || count($statements) !== 1 || !$statements[0] instanceof Return_) {
-            return null;
-        }
-
-        $returnExpression = $statements[0]->expr;
-
-        if (!$returnExpression instanceof MethodCall || !$returnExpression->var instanceof Variable || $returnExpression->var->name !== 'this') {
-            return null;
-        }
-
-        if (!$this->isNames($returnExpression->name, ['hasOne', 'hasMany'])) {
-            return null;
-        }
-
-        $firstArgument = $returnExpression->args[0] ?? null;
-
-        if (!$firstArgument instanceof Arg || !$firstArgument->value instanceof ClassConstFetch) {
-            return null;
-        }
-
-        $classConstFetch = $firstArgument->value;
-
-        if (!$this->isName($classConstFetch->name, 'class') || !$classConstFetch->class instanceof Name) {
-            return null;
-        }
-
-        return $classConstFetch->class->toString();
     }
 }
