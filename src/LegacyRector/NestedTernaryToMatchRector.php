@@ -93,7 +93,7 @@ final class NestedTernaryToMatchRector extends AbstractRector
         }
 
         // nothing long enough
-        if (count($conditionsAndResults) < 2 || !$defaultExpr instanceof Expr) {
+        if (count($conditionsAndResults) < 2 || $defaultExpr === null) {
             return null;
         }
 
