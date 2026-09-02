@@ -23,6 +23,7 @@ Each configurable rule documents its parameters in its section.
     - [Yii2FindAllIdShortcutRector](#yii2findallidshortcutrector)
     - [Yii2FindOneFindAllShortcutRector](#yii2findonefindallshortcutrector)
     - [Yii2FindOneIdShortcutRector](#yii2findoneidshortcutrector)
+    - [Yii2MergeModelRulesRector](#yii2mergemodelrulesrector)
     - [Yii2PropertyAccessRector](#yii2propertyaccessrector)
     - [Yii2RedundantActiveRecordSelfLookupRector](#yii2redundantactiverecordselflookuprector)
     - [Yii2UseExistsInsteadOfCountRector](#yii2useexistsinsteadofcountrector)
@@ -417,6 +418,43 @@ $model = User::findOne(['id' => $id]);
 
 ```php
 $model = User::findOne($id);
+```
+
+Parameters: none.
+
+### Yii2MergeModelRulesRector
+
+Merges `yii\base\Model::rules()` entries that use the same validator and identical options into one entry. Attributes from string and literal attribute-array forms are combined without duplicates. It only changes a `rules()` method whose body is a single `return [...]` containing literal rule arrays; dynamic entries, spreads, and other method bodies are left unchanged.
+
+**Before**
+
+```php
+final class LoginForm extends \yii\base\Model
+{
+    public function rules(): array
+    {
+        return [
+            ['login', 'required'],
+            ['password', 'required'],
+            ['email', 'string', 'max' => 255],
+        ];
+    }
+}
+```
+
+**After**
+
+```php
+final class LoginForm extends \yii\base\Model
+{
+    public function rules(): array
+    {
+        return [
+            [['login', 'password'], 'required'],
+            ['email', 'string', 'max' => 255],
+        ];
+    }
+}
 ```
 
 Parameters: none.

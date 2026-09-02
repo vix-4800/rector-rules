@@ -17,6 +17,7 @@ use Vix\RectorRules\Yii2\Yii2AddPropertyTagsRector;
 use Vix\RectorRules\Yii2\Yii2FindAllIdShortcutRector;
 use Vix\RectorRules\Yii2\Yii2FindOneFindAllShortcutRector;
 use Vix\RectorRules\Yii2\Yii2FindOneIdShortcutRector;
+use Vix\RectorRules\Yii2\Yii2MergeModelRulesRector;
 use Vix\RectorRules\Yii2\Yii2PropertyAccessRector;
 use Vix\RectorRules\Yii2\Yii2RedundantActiveRecordSelfLookupRector;
 use Vix\RectorRules\Yii2\Yii2UseExistsInsteadOfCountRector;
@@ -39,6 +40,7 @@ return static function (RectorConfig $rectorConfig): void {
         Yii2FindAllIdShortcutRector::class,
         Yii2FindOneFindAllShortcutRector::class,
         Yii2FindOneIdShortcutRector::class,
+        Yii2MergeModelRulesRector::class,
         Yii2PropertyAccessRector::class,
         Yii2RedundantActiveRecordSelfLookupRector::class,
         Yii2UseExistsInsteadOfCountRector::class,
