@@ -68,13 +68,12 @@ final class NestedTernaryToMatchRector extends AbstractRector
         $ternary = $node->expr;
 
         // traverse nested ternaries to collect them all
-        $currentTernary = $ternary;
-
         /** @var list<array{condition: Expr, result: Expr}> $conditionsAndResults */
         $conditionsAndResults = [];
-        $defaultExpr = null;
 
-        while ($currentTernary instanceof Ternary) {
+        $currentTernary = $ternary;
+
+        while (true) {
             if (!$currentTernary->if instanceof Expr) {
                 // short ternary, skip
                 return null;
@@ -85,15 +84,19 @@ final class NestedTernaryToMatchRector extends AbstractRector
                 'result' => $currentTernary->if,
             ];
 
-            $currentTernary = $currentTernary->else;
+            $else = $currentTernary->else;
 
-            if (!$currentTernary instanceof Ternary) {
-                $defaultExpr = $currentTernary;
+            if (!$else instanceof Ternary) {
+                $defaultExpr = $else;
+
+                break;
             }
+
+            $currentTernary = $else;
         }
 
         // nothing long enough
-        if (count($conditionsAndResults) < 2 || $defaultExpr === null) {
+        if (count($conditionsAndResults) < 2) {
             return null;
         }
 
