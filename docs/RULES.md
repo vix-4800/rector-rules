@@ -254,7 +254,7 @@ Parameters:
 
 ### Yii2AddRelationQueryGenericRector
 
-Adds the related model type to an `ActiveQuery` return annotation for direct Yii2 `hasOne()` and `hasMany()` relations. The method must return `yii\db\ActiveQuery`, have an exact `@return ActiveQuery` annotation, and contain a single direct relation return using `Model::class`. Existing generics, dynamic model classes, and other query types are unchanged.
+Adds the related model type to an `ActiveQuery` return annotation for Yii2 `hasOne()` and `hasMany()` relations, including relation query chains such as `viaTable()`. The method must return `yii\db\ActiveQuery`, have an exact `@return ActiveQuery` annotation, and contain a single relation return using `Model::class`. Existing generics, dynamic model classes, and other query types are unchanged.
 
 **Before**
 
@@ -304,7 +304,7 @@ Parameters: none.
 
 ### Yii2AddPropertyTagsRector
 
-Adds missing `@property`, `@property-read`, and `@property-write` tags for public Yii2 magic accessors declared by a `yii\base\BaseObject` subclass. Types come from method PHPDoc or native signatures. For `yii\db\BaseActiveRecord`, direct `hasOne()` getters become nullable related-model properties and `hasMany()` getters become related-model arrays. Classes with custom `__get()` or `__set()` implementations are skipped.
+Adds missing `@property`, `@property-read`, and `@property-write` tags for public Yii2 magic accessors declared by a `yii\base\BaseObject` subclass. Types come from method PHPDoc or native signatures. For `yii\db\BaseActiveRecord`, `hasOne()` getters become nullable related-model properties and `hasMany()` getters become related-model arrays, including relations with query chains such as `viaTable()`. Classes with custom `__get()` or `__set()` implementations are skipped.
 
 **Before**
 

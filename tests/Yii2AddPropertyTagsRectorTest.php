@@ -37,6 +37,10 @@ final class Yii2AddPropertyTagsRectorTest extends AbstractRuleTestCase
                 namespace yii\db {
                     class ActiveQuery
                     {
+                        public function viaTable(string $tableName, array $link): self
+                        {
+                            return $this;
+                        }
                     }
 
                     class BaseActiveRecord extends \yii\base\BaseObject
@@ -86,6 +90,10 @@ final class Yii2AddPropertyTagsRectorTest extends AbstractRuleTestCase
                     {
                     }
 
+                    final class PropertyTagsChat
+                    {
+                    }
+
                     final class PropertyTagsOrder extends BaseActiveRecord
                     {
                         public function getUser(): \yii\db\ActiveQuery
@@ -96,6 +104,12 @@ final class Yii2AddPropertyTagsRectorTest extends AbstractRuleTestCase
                         public function getBooks(): \yii\db\ActiveQuery
                         {
                             return $this->hasMany(PropertyTagsBook::class, ['order_id' => 'id']);
+                        }
+
+                        public function getChats(): \yii\db\ActiveQuery
+                        {
+                            return $this->hasMany(PropertyTagsChat::class, ['id' => 'chat_id'])
+                                ->viaTable('property_tags_order_chat', ['order_id' => 'id']);
                         }
                     }
                 }
@@ -112,6 +126,10 @@ final class Yii2AddPropertyTagsRectorTest extends AbstractRuleTestCase
                 namespace yii\db {
                     class ActiveQuery
                     {
+                        public function viaTable(string $tableName, array $link): self
+                        {
+                            return $this;
+                        }
                     }
 
                     class BaseActiveRecord extends \yii\base\BaseObject
@@ -166,9 +184,14 @@ final class Yii2AddPropertyTagsRectorTest extends AbstractRuleTestCase
                     {
                     }
 
+                    final class PropertyTagsChat
+                    {
+                    }
+
                     /**
                      * @property-read PropertyTagsUser|null $user
                      * @property-read PropertyTagsBook[] $books
+                     * @property-read PropertyTagsChat[] $chats
                      */
                     final class PropertyTagsOrder extends BaseActiveRecord
                     {
@@ -180,6 +203,12 @@ final class Yii2AddPropertyTagsRectorTest extends AbstractRuleTestCase
                         public function getBooks(): \yii\db\ActiveQuery
                         {
                             return $this->hasMany(PropertyTagsBook::class, ['order_id' => 'id']);
+                        }
+
+                        public function getChats(): \yii\db\ActiveQuery
+                        {
+                            return $this->hasMany(PropertyTagsChat::class, ['id' => 'chat_id'])
+                                ->viaTable('property_tags_order_chat', ['order_id' => 'id']);
                         }
                     }
                 }

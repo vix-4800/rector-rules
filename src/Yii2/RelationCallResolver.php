@@ -33,19 +33,25 @@ final readonly class RelationCallResolver
 
         $returnExpression = $statements[0]->expr;
 
-        if (!$returnExpression instanceof MethodCall || !$returnExpression->var instanceof Variable) {
+        if (!$returnExpression instanceof MethodCall) {
             return null;
         }
 
-        if ($returnExpression->var->name !== 'this') {
+        $relationCall = $returnExpression;
+
+        while ($relationCall->var instanceof MethodCall) {
+            $relationCall = $relationCall->var;
+        }
+
+        if (!$relationCall->var instanceof Variable || $relationCall->var->name !== 'this') {
             return null;
         }
 
-        if (!$this->nodeNameResolver->isNames($returnExpression->name, ['hasOne', 'hasMany'])) {
+        if (!$this->nodeNameResolver->isNames($relationCall->name, ['hasOne', 'hasMany'])) {
             return null;
         }
 
-        $firstArgument = $returnExpression->args[0] ?? null;
+        $firstArgument = $relationCall->args[0] ?? null;
 
         if (!$firstArgument instanceof Arg || $firstArgument->unpack || !$firstArgument->value instanceof ClassConstFetch) {
             return null;
@@ -59,7 +65,7 @@ final readonly class RelationCallResolver
 
         return [
             'relatedClass' => $classConstFetch->class,
-            'isMany' => $this->nodeNameResolver->isName($returnExpression->name, 'hasMany'),
+            'isMany' => $this->nodeNameResolver->isName($relationCall->name, 'hasMany'),
         ];
     }
 }

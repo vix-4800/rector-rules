@@ -94,6 +94,43 @@ final class Yii2AddRelationQueryGenericRectorTest extends AbstractRuleTestCase
                 PHP,
         ];
 
+        yield 'has many relation via table' => [
+            <<<'PHP'
+                <?php
+
+                use yii\db\ActiveQuery;
+
+                final class User
+                {
+                    /**
+                     * @return ActiveQuery
+                     */
+                    public function getChats(): ActiveQuery
+                    {
+                        return $this->hasMany(Chat::class, ['id' => 'chat_id'])
+                            ->viaTable('user_chat', ['user_id' => 'id']);
+                    }
+                }
+                PHP,
+            <<<'PHP'
+                <?php
+
+                use yii\db\ActiveQuery;
+
+                final class User
+                {
+                    /**
+                     * @return ActiveQuery<Chat>
+                     */
+                    public function getChats(): ActiveQuery
+                    {
+                        return $this->hasMany(Chat::class, ['id' => 'chat_id'])
+                            ->viaTable('user_chat', ['user_id' => 'id']);
+                    }
+                }
+                PHP,
+        ];
+
         yield 'relation to model in the same namespace' => [
             <<<'PHP'
                 <?php
