@@ -60,6 +60,7 @@ final class Yii2AddPropertyTagsRectorTest extends AbstractRuleTestCase
                 namespace {
                     use yii\base\BaseObject;
                     use yii\db\BaseActiveRecord;
+                    use yii\db\ActiveQuery;
 
                     final class Settings extends BaseObject
                     {
@@ -94,6 +95,9 @@ final class Yii2AddPropertyTagsRectorTest extends AbstractRuleTestCase
                     {
                     }
 
+                    /**
+                     * @property-read ActiveQuery $chats
+                     */
                     final class PropertyTagsOrder extends BaseActiveRecord
                     {
                         public function getUser(): \yii\db\ActiveQuery
@@ -149,6 +153,7 @@ final class Yii2AddPropertyTagsRectorTest extends AbstractRuleTestCase
                 namespace {
                     use yii\base\BaseObject;
                     use yii\db\BaseActiveRecord;
+                    use yii\db\ActiveQuery;
 
                     /**
                      * @property string $name
@@ -189,9 +194,9 @@ final class Yii2AddPropertyTagsRectorTest extends AbstractRuleTestCase
                     }
 
                     /**
+                     * @property-read PropertyTagsChat[] $chats
                      * @property-read PropertyTagsUser|null $user
                      * @property-read PropertyTagsBook[] $books
-                     * @property-read PropertyTagsChat[] $chats
                      */
                     final class PropertyTagsOrder extends BaseActiveRecord
                     {

@@ -104,11 +104,12 @@ final class Yii2AddRelationQueryGenericRectorTest extends AbstractRuleTestCase
                 {
                     /**
                      * @return ActiveQuery
+                     *
+                     * @throws \RuntimeException
                      */
                     public function getChats(): ActiveQuery
                     {
-                        return $this->hasMany(Chat::class, ['id' => 'chat_id'])
-                            ->viaTable('user_chat', ['user_id' => 'id']);
+                        return $this->hasMany(Chat::class, ['id' => 'chat_id'])->viaTable('user_chat', ['user_id' => 'id']);
                     }
                 }
                 PHP,
@@ -121,11 +122,12 @@ final class Yii2AddRelationQueryGenericRectorTest extends AbstractRuleTestCase
                 {
                     /**
                      * @return ActiveQuery<Chat>
+                     *
+                     * @throws \RuntimeException
                      */
                     public function getChats(): ActiveQuery
                     {
-                        return $this->hasMany(Chat::class, ['id' => 'chat_id'])
-                            ->viaTable('user_chat', ['user_id' => 'id']);
+                        return $this->hasMany(Chat::class, ['id' => 'chat_id'])->viaTable('user_chat', ['user_id' => 'id']);
                     }
                 }
                 PHP,
