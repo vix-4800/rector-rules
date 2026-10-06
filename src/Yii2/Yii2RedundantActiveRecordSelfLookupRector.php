@@ -17,7 +17,6 @@ use PhpParser\Node\Name;
 use PhpParser\Node\Scalar\Int_;
 use PhpParser\Node\Scalar\String_;
 use PhpParser\Node\Stmt\Class_;
-use PhpParser\Node\VariadicPlaceholder;
 use Rector\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
@@ -128,6 +127,12 @@ final class Yii2RedundantActiveRecordSelfLookupRector extends AbstractRector
             return false;
         }
 
+        foreach ($node->args as $arg) {
+            if (!$arg instanceof Arg) {
+                return false;
+            }
+        }
+
         $whereCall = $this->resolveWhereCall($node->var);
 
         if (!$whereCall instanceof MethodCall) {
@@ -138,6 +143,12 @@ final class Yii2RedundantActiveRecordSelfLookupRector extends AbstractRector
 
         if (!$findCall instanceof StaticCall || !$this->isName($findCall->name, 'find')) {
             return false;
+        }
+
+        foreach ($findCall->args as $arg) {
+            if (!$arg instanceof Arg) {
+                return false;
+            }
         }
 
         if (!$this->isCurrentClassStaticCall($findCall, $className, $shortClassName)) {
