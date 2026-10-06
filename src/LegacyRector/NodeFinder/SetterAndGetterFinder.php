@@ -1,0 +1,76 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Vix\RectorRules\LegacyRector\NodeFinder;
+
+use PhpParser\Node\Stmt\Class_;
+use PhpParser\Node\Stmt\ClassMethod;
+use Rector\TypeDeclaration\NodeAnalyzer\ClassMethodAndPropertyAnalyzer;
+
+final class SetterAndGetterFinder
+{
+    /**
+     * @readonly
+     */
+    private ClassMethodAndPropertyAnalyzer $classMethodAndPropertyAnalyzer;
+
+    public function __construct(ClassMethodAndPropertyAnalyzer $classMethodAndPropertyAnalyzer)
+    {
+        $this->classMethodAndPropertyAnalyzer = $classMethodAndPropertyAnalyzer;
+    }
+
+    /**
+     * @param Class_ $class
+     * @param string $propertyName
+     *
+     * @return list<ClassMethod>
+     */
+    public function findGetterAndSetterClassMethods(Class_ $class, string $propertyName): array
+    {
+        $classMethods = [];
+        $getterClassMethod = $this->findGetterClassMethod($class, $propertyName);
+
+        if ($getterClassMethod instanceof ClassMethod) {
+            $classMethods[] = $getterClassMethod;
+        }
+
+        $setterClassMethod = $this->findSetterClassMethod($class, $propertyName);
+
+        if ($setterClassMethod instanceof ClassMethod) {
+            $classMethods[] = $setterClassMethod;
+        }
+
+        return $classMethods;
+    }
+
+    public function findGetterClassMethod(Class_ $class, string $propertyName): ?ClassMethod
+    {
+        foreach ($class->getMethods() as $classMethod) {
+            if (!$this->classMethodAndPropertyAnalyzer->hasPropertyFetchReturn($classMethod, $propertyName)) {
+                continue;
+            }
+
+            return $classMethod;
+        }
+
+        return null;
+    }
+
+    public function findSetterClassMethod(Class_ $class, string $propertyName): ?ClassMethod
+    {
+        foreach ($class->getMethods() as $classMethod) {
+            if ($classMethod->isMagic()) {
+                continue;
+            }
+
+            if (!$this->classMethodAndPropertyAnalyzer->hasOnlyPropertyAssign($classMethod, $propertyName)) {
+                continue;
+            }
+
+            return $classMethod;
+        }
+
+        return null;
+    }
+}
