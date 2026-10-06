@@ -10,7 +10,6 @@ use PhpParser\Node\Expr\Array_;
 use PhpParser\Node\Expr\StaticCall;
 use PhpParser\Node\Identifier;
 use PhpParser\Node\Scalar\String_;
-use PhpParser\Node\VariadicPlaceholder;
 use Rector\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 
@@ -45,7 +44,7 @@ final class Yii2FindAllIdShortcutRector extends AbstractRector
 
         $firstArg = $node->args[0];
 
-        if ($firstArg instanceof VariadicPlaceholder) {
+        if (!$firstArg instanceof Arg) {
             return null;
         }
 

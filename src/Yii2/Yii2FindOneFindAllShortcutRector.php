@@ -11,7 +11,6 @@ use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Expr\StaticCall;
 use PhpParser\Node\Identifier;
 use PhpParser\Node\Scalar\String_;
-use PhpParser\Node\VariadicPlaceholder;
 use Rector\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
@@ -121,7 +120,7 @@ final class Yii2FindOneFindAllShortcutRector extends AbstractRector
 
         $whereArg = $whereCall->args[0];
 
-        if ($whereArg instanceof VariadicPlaceholder) {
+        if (!$whereArg instanceof Arg) {
             return [];
         }
 

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Vix\RectorRules\Yii2;
 
 use PhpParser\Node;
+use PhpParser\Node\Arg;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\Array_;
 use PhpParser\Node\Expr\MethodCall;
@@ -113,7 +114,7 @@ final class Yii2RedundantActiveRecordSelfLookupRector extends AbstractRector
 
         $arg = $node->args[0];
 
-        if ($arg instanceof VariadicPlaceholder) {
+        if (!$arg instanceof Arg) {
             return false;
         }
 
@@ -149,7 +150,7 @@ final class Yii2RedundantActiveRecordSelfLookupRector extends AbstractRector
 
         $arg = $whereCall->args[0];
 
-        if ($arg instanceof VariadicPlaceholder) {
+        if (!$arg instanceof Arg) {
             return false;
         }
 
@@ -185,7 +186,7 @@ final class Yii2RedundantActiveRecordSelfLookupRector extends AbstractRector
 
         $arg = $methodCall->args[0];
 
-        if ($arg instanceof VariadicPlaceholder) {
+        if (!$arg instanceof Arg) {
             return false;
         }
 
