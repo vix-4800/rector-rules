@@ -97,6 +97,14 @@ final class Yii2FindOneFindAllShortcutRector extends AbstractRector
             return null;
         }
 
+        foreach ([$node, $whereCall, $findCall] as $call) {
+            foreach ($call->args as $arg) {
+                if (!$arg instanceof Arg) {
+                    return null;
+                }
+            }
+        }
+
         $newMethod = $methodName === 'one' ? 'findOne' : 'findAll';
         $newArgs = $this->resolveShortcutArgs($whereCall);
 
@@ -115,7 +123,7 @@ final class Yii2FindOneFindAllShortcutRector extends AbstractRector
     private function resolveShortcutArgs(MethodCall $whereCall): array
     {
         if (count($whereCall->args) !== 1) {
-            return $this->filterArgs($whereCall->args);
+            return array_values($whereCall->getArgs());
         }
 
         $whereArg = $whereCall->args[0];
@@ -157,25 +165,5 @@ final class Yii2FindOneFindAllShortcutRector extends AbstractRector
         }
 
         return new Arg($item->value);
-    }
-
-    /**
-     * @param array<int|string, Arg|VariadicPlaceholder> $args
-     *
-     * @return list<Arg>
-     */
-    private function filterArgs(array $args): array
-    {
-        $filteredArgs = [];
-
-        foreach ($args as $arg) {
-            if (!$arg instanceof Arg) {
-                continue;
-            }
-
-            $filteredArgs[] = $arg;
-        }
-
-        return $filteredArgs;
     }
 }
