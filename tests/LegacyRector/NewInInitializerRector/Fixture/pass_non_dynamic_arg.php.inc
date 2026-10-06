@@ -1,0 +1,35 @@
+<?php
+
+namespace Vix\RectorRules\Tests\LegacyRector\NewInInitializerRector\Fixture;
+
+use DateTime;
+use DateTimeZone;
+
+final class PassNonDynamicArg
+{
+    private DateTime $dateTime;
+
+    public function __construct(
+        ?DateTime $dateTime = null
+    ) {
+        $this->dateTime = $dateTime ?? new DateTime('now', new DateTimeZone('Asia/Jakarta'));
+    }
+}
+
+?>
+-----
+<?php
+
+namespace Vix\RectorRules\Tests\LegacyRector\NewInInitializerRector\Fixture;
+
+use DateTime;
+use DateTimeZone;
+
+final class PassNonDynamicArg
+{
+    public function __construct(private ?DateTime $dateTime = new DateTime('now', new DateTimeZone('Asia/Jakarta')))
+    {
+    }
+}
+
+?>
