@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 namespace Vix\RectorRules\Tests;
 
+use PhpParser\Node\Stmt\Class_;
+use PhpParser\NodeTraverser;
+use PhpParser\NodeVisitor\NameResolver;
+use PhpParser\ParserFactory;
+use PhpParser\PrettyPrinter\Standard;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
@@ -187,6 +192,20 @@ final class Yii2RedundantActiveRecordSelfLookupRectorTest extends AbstractRuleTe
 
     public static function provideSkipsNonCurrentModelLookupCases(): iterable
     {
+        yield 'terminal callable' => [
+            <<<'PHP'
+                <?php
+
+                class PartialLookup extends \yii\db\ActiveRecord
+                {
+                    public function lookup()
+                    {
+                        return self::find()->where(['id' => $this->id])->one(...);
+                    }
+                }
+                PHP,
+        ];
+
         yield 'different id source' => [
             <<<'PHP'
                 <?php
@@ -260,6 +279,69 @@ final class Yii2RedundantActiveRecordSelfLookupRectorTest extends AbstractRuleTe
                     public function getCurrentModel(): self
                     {
                         return self::findOne($this->id);
+                    }
+                }
+                PHP,
+        ];
+    }
+
+    #[DataProvider('provideArgumentPlaceholderCases')]
+    #[Test]
+    public function skipsArgumentPlaceholders(string $input): void
+    {
+        // PHPStan's scope resolver does not yet support partial application syntax.
+        $nodes = (new ParserFactory())->createForNewestSupportedVersion()->parse($input);
+        self::assertIsArray($nodes);
+        $nodes = (new NodeTraverser(new NameResolver()))->traverse($nodes);
+        $node = $nodes[0];
+        self::assertInstanceOf(Class_::class, $node);
+        $printer = new Standard();
+        $before = $printer->prettyPrintFile($nodes);
+        $rule = $this->make(Yii2RedundantActiveRecordSelfLookupRector::class);
+
+        self::assertNull($rule->refactor($node));
+        self::assertSame($before, $printer->prettyPrintFile($nodes));
+    }
+
+    public static function provideArgumentPlaceholderCases(): iterable
+    {
+        yield 'partial findOne' => [
+            <<<'PHP'
+                <?php
+
+                class PartialLookup extends \yii\db\ActiveRecord
+                {
+                    public function lookup()
+                    {
+                        return self::findOne(?);
+                    }
+                }
+                PHP,
+        ];
+
+        yield 'partial where' => [
+            <<<'PHP'
+                <?php
+
+                class PartialLookup extends \yii\db\ActiveRecord
+                {
+                    public function lookup()
+                    {
+                        return self::find()->where(?)->one();
+                    }
+                }
+                PHP,
+        ];
+
+        yield 'partial limit' => [
+            <<<'PHP'
+                <?php
+
+                class PartialLookup extends \yii\db\ActiveRecord
+                {
+                    public function lookup()
+                    {
+                        return self::find()->where(['id' => $this->id])->limit(?)->one();
                     }
                 }
                 PHP,

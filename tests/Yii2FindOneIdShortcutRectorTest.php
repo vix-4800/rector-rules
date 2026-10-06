@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Vix\RectorRules\Tests;
 
+use PhpParser\Node\Expr;
+use PhpParser\Node\Stmt\Expression;
+use PhpParser\ParserFactory;
+use PhpParser\PrettyPrinter\Standard;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
@@ -74,6 +78,36 @@ final class Yii2FindOneIdShortcutRectorTest extends AbstractRuleTestCase
 
                 $model = User::findOne(['uuid' => $uuid]);
                 $same = User::findOne($id);
+                PHP,
+        ];
+    }
+
+    #[DataProvider('provideArgumentPlaceholderCases')]
+    #[Test]
+    public function skipsArgumentPlaceholders(string $input): void
+    {
+        // PHPStan's scope resolver does not yet support partial application syntax.
+        $nodes = (new ParserFactory())->createForNewestSupportedVersion()->parse($input);
+        self::assertIsArray($nodes);
+        $node = $nodes[0];
+        self::assertInstanceOf(Expression::class, $node);
+        self::assertInstanceOf(Expr\Assign::class, $node->expr);
+        $node = $node->expr->expr;
+        $printer = new Standard();
+        $before = $printer->prettyPrintFile($nodes);
+        $rule = $this->make(Yii2FindOneIdShortcutRector::class);
+
+        self::assertNull($rule->refactor($node));
+        self::assertSame($before, $printer->prettyPrintFile($nodes));
+    }
+
+    public static function provideArgumentPlaceholderCases(): iterable
+    {
+        yield 'partial application' => [
+            <<<'PHP'
+                <?php
+
+                $callback = User::findOne(?);
                 PHP,
         ];
     }
