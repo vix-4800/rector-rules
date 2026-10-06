@@ -124,8 +124,8 @@ final class DeprecatedAnnotationToDeprecatedAttributeConverter
             return new AttributeGroup([new Attribute(new FullyQualified(Deprecated::class), [new Arg(new String_($annotationValue, [AttributeKey::KIND => String_::KIND_NOWDOC, AttributeKey::DOC_LABEL => 'TXT']), false, false, [], new Identifier('message'))])]);
         }
 
-        $since = $matches[1] ?? null;
-        $message = $matches[2] ?? null;
+        $since = $matches[1];
+        $message = $matches[2];
 
         return $this->phpAttributeGroupFactory->createFromClassWithItems(Deprecated::class, array_filter(['message' => $message, 'since' => $since]));
     }
