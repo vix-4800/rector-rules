@@ -14,8 +14,6 @@ use PhpParser\Node\Name;
 use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\Expression;
 use PhpParser\Node\Stmt\Return_;
-use PHPStan\Reflection\ClassReflection;
-use PHPStan\Type\ObjectType;
 use Rector\Naming\Naming\PropertyNaming;
 use Rector\NodeTypeResolver\Node\AttributeKey;
 use Rector\Rector\AbstractRector;
@@ -137,13 +135,7 @@ final class FluentSettersToStandaloneCallMethodRector extends AbstractRector
     {
         $callerType = $this->getType($firstMethodCall);
 
-        if ($callerType instanceof ObjectType) {
-            $classReflection = $callerType->getClassReflection();
-
-            if (!$classReflection instanceof ClassReflection) {
-                return false;
-            }
-
+        foreach ($callerType->getObjectClassReflections() as $classReflection) {
             $fileName = $classReflection->getFileName();
 
             if ($fileName === null || str_contains($fileName, 'vendor')) {

@@ -58,12 +58,12 @@ final class AddSensitiveParameterAttributeRector extends AbstractRector implemen
 
         $sensitiveParameters = [];
 
-        foreach ($parameters as $key => $parameter) {
+        foreach ($parameters as $parameter) {
             if (!is_string($parameter)) {
                 throw new InvalidArgumentException('Sensitive parameter names must be strings.');
             }
 
-            $sensitiveParameters[$key] = $parameter;
+            $sensitiveParameters[] = $parameter;
         }
 
         $this->sensitiveParameters = $sensitiveParameters;

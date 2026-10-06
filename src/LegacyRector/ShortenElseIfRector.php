@@ -9,7 +9,6 @@ use PhpParser\Node\Stmt\Else_;
 use PhpParser\Node\Stmt\ElseIf_;
 use PhpParser\Node\Stmt\If_;
 use PhpParser\Node\Stmt\Nop;
-use PhpParser\Token;
 use Rector\Contract\Rector\HTMLAverseRectorInterface;
 use Rector\NodeTypeResolver\Node\AttributeKey;
 use Rector\Rector\AbstractRector;
@@ -132,10 +131,6 @@ final class ShortenElseIfRector extends AbstractRector implements HTMLAverseRect
 
         for ($i = $startTokenPos + 1; isset($oldTokens[$i]); ++$i) {
             $token = $oldTokens[$i];
-
-            if (!$token instanceof Token) {
-                continue;
-            }
 
             if ($token->text === ':') {
                 return true;

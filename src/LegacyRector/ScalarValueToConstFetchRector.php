@@ -64,12 +64,12 @@ final class ScalarValueToConstFetchRector extends AbstractRector implements Conf
     {
         $values = [];
 
-        foreach ($configuration as $key => $value) {
+        foreach ($configuration as $value) {
             if (!$value instanceof ScalarValueToConstFetch) {
                 throw new InvalidArgumentException('Configuration entries must be ScalarValueToConstFetch objects.');
             }
 
-            $values[$key] = $value;
+            $values[] = $value;
         }
 
         $this->scalarValueToConstFetches = $values;

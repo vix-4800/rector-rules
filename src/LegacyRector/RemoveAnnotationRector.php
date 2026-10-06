@@ -128,12 +128,12 @@ final class RemoveAnnotationRector extends AbstractRector implements Configurabl
     {
         $annotationsToRemove = [];
 
-        foreach ($configuration as $key => $annotation) {
+        foreach ($configuration as $annotation) {
             if (!is_string($annotation)) {
                 throw new InvalidArgumentException('Annotation names must be strings.');
             }
 
-            $annotationsToRemove[$key] = $annotation;
+            $annotationsToRemove[] = $annotation;
         }
 
         $this->annotationsToRemove = $annotationsToRemove;

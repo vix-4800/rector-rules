@@ -74,6 +74,12 @@ final class AddInterfaceByTraitRector extends AbstractRector implements Configur
                 continue;
             }
 
+            foreach ($node->implements as $implementedInterface) {
+                if ($this->isName($implementedInterface, $interfaceName)) {
+                    continue 2;
+                }
+            }
+
             $node->implements[] = new FullyQualified($interfaceName);
             $hasChanged = true;
         }
@@ -86,7 +92,7 @@ final class AddInterfaceByTraitRector extends AbstractRector implements Configur
     }
 
     /**
-     * @param list<mixed> $configuration
+     * @param array<mixed> $configuration
      */
     public function configure(array $configuration): void
     {

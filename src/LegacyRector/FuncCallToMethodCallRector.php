@@ -131,12 +131,12 @@ final class FuncCallToMethodCallRector extends AbstractRector implements Configu
     {
         $values = [];
 
-        foreach ($configuration as $key => $value) {
+        foreach ($configuration as $value) {
             if (!$value instanceof FuncCallToMethodCall) {
                 throw new InvalidArgumentException('Configuration entries must be FuncCallToMethodCall objects.');
             }
 
-            $values[$key] = $value;
+            $values[] = $value;
         }
 
         $this->funcNameToMethodCallNames = $values;

@@ -30,8 +30,10 @@ use PhpParser\Node\Stmt\Namespace_;
 use PhpParser\Node\Stmt\TryCatch;
 use PhpParser\Node\Stmt\While_;
 use PhpParser\Node\VariadicPlaceholder;
+use Rector\DeadCode\NodeAnalyzer\ExprUsedInNodeAnalyzer;
 use Rector\NodeAnalyzer\ExprAnalyzer;
 use Rector\PhpParser\Enum\NodeGroup;
+use Rector\PhpParser\Node\BetterNodeFinder;
 use Rector\PhpParser\Node\FileNode;
 use Rector\Rector\AbstractRector;
 use Rector\Tests\Php85\Rector\StmtsAwareInterface\SequentialAssignmentsToPipeOperatorRector\SequentialAssignmentsToPipeOperatorRectorTest;
@@ -70,9 +72,15 @@ final class SequentialAssignmentsToPipeOperatorRector extends AbstractRector imp
      */
     private ExprAnalyzer $exprAnalyzer;
 
-    public function __construct(ExprAnalyzer $exprAnalyzer)
+    private BetterNodeFinder $betterNodeFinder;
+
+    private ExprUsedInNodeAnalyzer $exprUsedInNodeAnalyzer;
+
+    public function __construct(ExprAnalyzer $exprAnalyzer, BetterNodeFinder $betterNodeFinder, ExprUsedInNodeAnalyzer $exprUsedInNodeAnalyzer)
     {
         $this->exprAnalyzer = $exprAnalyzer;
+        $this->betterNodeFinder = $betterNodeFinder;
+        $this->exprUsedInNodeAnalyzer = $exprUsedInNodeAnalyzer;
     }
 
     public function getRuleDefinition(): RuleDefinition
@@ -117,6 +125,7 @@ final class SequentialAssignmentsToPipeOperatorRector extends AbstractRector imp
         }
 
         $hasChanged = false;
+        $node->stmts = array_values($node->stmts);
         $statements = $node->stmts;
         $totalStatements = count($statements) - 1;
 
@@ -124,10 +133,14 @@ final class SequentialAssignmentsToPipeOperatorRector extends AbstractRector imp
             $chain = $this->findAssignmentChain($statements, $i);
 
             if ($chain && count($chain) >= 2) {
-                $this->processAssignmentChain($node, $chain, $i);
+                if ($this->hasUsedIntermediateAssignment($chain)) {
+                    continue;
+                }
+
+                $statements = $this->processAssignmentChain($statements, $chain, $i);
+                $node->stmts = $statements;
                 $hasChanged = true;
-                // Skip processed statements
-                $i += count($chain) - 1;
+                $totalStatements = count($statements) - 1;
             }
         }
 
@@ -142,7 +155,7 @@ final class SequentialAssignmentsToPipeOperatorRector extends AbstractRector imp
      * @param array<int, Stmt> $statements
      * @param int              $startIndex
      *
-     * @return array<int, array{stmt: Stmt, assign: Expr, funcCall: FuncCall}>|null
+     * @return list<array{stmt: Expression, assign: Assign, funcCall: FuncCall}>|null
      */
     private function findAssignmentChain(array $statements, int $startIndex): ?array
     {
@@ -163,6 +176,10 @@ final class SequentialAssignmentsToPipeOperatorRector extends AbstractRector imp
                 return null;
             }
 
+            if (!$expr->var instanceof Variable || !is_string($expr->var->name)) {
+                return null;
+            }
+
             // Check if this is a simple function call with one argument
             if (!$expr->expr instanceof FuncCall) {
                 return null;
@@ -176,7 +193,7 @@ final class SequentialAssignmentsToPipeOperatorRector extends AbstractRector imp
 
             $arg = $funcCall->args[0];
 
-            if (!$arg instanceof Arg) {
+            if (!$arg instanceof Arg || $arg->unpack || $arg->name !== null) {
                 return null;
             }
 
@@ -206,61 +223,62 @@ final class SequentialAssignmentsToPipeOperatorRector extends AbstractRector imp
     }
 
     /**
-     * @param StmtsAware                                                      $stmtsAware
-     * @param array<int, array{stmt: Stmt, assign: Expr, funcCall: FuncCall}> $chain
-     * @param int                                                             $startIndex
+     * @param list<array{stmt: Expression, assign: Assign, funcCall: FuncCall}> $chain
      */
-    private function processAssignmentChain(Node $stmtsAware, array $chain, int $startIndex): void
+    private function hasUsedIntermediateAssignment(array $chain): bool
     {
-        if ($stmtsAware->stmts === null) {
-            return;
-        }
+        foreach (array_slice($chain, 0, -1) as $index => $item) {
+            $variable = $item['assign']->var;
 
-        $lastAssignment = $chain[count($chain) - 1]['assign'];
-        // Get the initial value from the first function call's argument
-        $firstFuncCall = $chain[0]['funcCall'];
+            if (!$variable instanceof Variable) {
+                return true;
+            }
 
-        if (!$firstFuncCall instanceof FuncCall) {
-            return;
-        }
+            $nextArg = $chain[$index + 1]['funcCall']->args[0];
 
-        $firstArg = $firstFuncCall->args[0];
+            if (!$nextArg instanceof Arg) {
+                return true;
+            }
 
-        if (!$firstArg instanceof Arg) {
-            return;
-        }
+            // Search the entire file, including uses outside a nested statement block.
+            $otherUse = $this->betterNodeFinder->findFirst($this->getFile()->getNewStmts(), fn(Node $node): bool => $node !== $variable
+                && $node !== $nextArg->value
+                && $this->exprUsedInNodeAnalyzer->isUsed($node, $variable));
 
-        $initialValue = $firstArg->value;
-        // Build the pipe chain
-        $pipeExpression = $initialValue;
-
-        foreach ($chain as $chainItem) {
-            $funcCall = $chainItem['funcCall'];
-            $placeholderCall = $this->createPlaceholderCall($funcCall);
-            $pipeExpression = new Pipe($pipeExpression, $placeholderCall);
-        }
-
-        if (!$lastAssignment instanceof Assign) {
-            return;
-        }
-
-        // Create the final assignment
-        $assign = new Assign($lastAssignment->var, $pipeExpression);
-        $finalExpression = new Expression($assign);
-        // Replace the statements
-        $endIndex = $startIndex + count($chain) - 1;
-
-        // Remove all intermediate statements and replace with the final pipe expression
-        for ($i = $startIndex; $i <= $endIndex; ++$i) {
-            if ($i === $startIndex) {
-                $stmtsAware->stmts[$i] = $finalExpression;
-            } else {
-                unset($stmtsAware->stmts[$i]);
+            if ($otherUse instanceof Node) {
+                return true;
             }
         }
 
-        // Reindex the array
-        $stmtsAware->stmts = array_values($stmtsAware->stmts);
+        return false;
+    }
+
+    /**
+     * @param list<Stmt> $statements
+     * @param list<array{stmt: Expression, assign: Assign, funcCall: FuncCall}> $chain
+     *
+     * @return list<Stmt>
+     */
+    private function processAssignmentChain(array $statements, array $chain, int $startIndex): array
+    {
+        $lastAssignment = $chain[count($chain) - 1]['assign'];
+        $firstArg = $chain[0]['funcCall']->args[0];
+
+        if (!$firstArg instanceof Arg) {
+            return $statements;
+        }
+
+        $pipeExpression = $firstArg->value;
+
+        foreach ($chain as $chainItem) {
+            $placeholderCall = $this->createPlaceholderCall($chainItem['funcCall']);
+            $pipeExpression = new Pipe($pipeExpression, $placeholderCall);
+        }
+
+        $assign = new Assign($lastAssignment->var, $pipeExpression);
+        array_splice($statements, $startIndex, count($chain), [new Expression($assign)]);
+
+        return $statements;
     }
 
     private function createPlaceholderCall(FuncCall $funcCall): FuncCall

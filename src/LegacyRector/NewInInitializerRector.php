@@ -229,7 +229,7 @@ final class NewInInitializerRector extends AbstractRector implements MinPhpVersi
             }
         }
 
-        return $params;
+        return array_values($params);
     }
 
     private function shouldSkipClass(Class_ $class): bool

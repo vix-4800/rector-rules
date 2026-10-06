@@ -17,11 +17,6 @@ use PhpParser\Node\Name\FullyQualified;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Expression;
 use PhpParser\PrettyPrinter\Standard;
-use PHPStan\Type\ArrayType;
-use PHPStan\Type\BooleanType;
-use PHPStan\Type\FloatType;
-use PHPStan\Type\IntegerType;
-use PHPStan\Type\StringType;
 use PHPStan\Type\Type;
 use Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfo;
 use Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfoFactory;
@@ -147,17 +142,17 @@ final class AddAssertArrayFromClassMethodDocblockRector extends AbstractRector i
 
             $paramDocType = $methodPhpDocInfo->getParamType($paramName);
 
-            if (!$paramDocType instanceof ArrayType) {
+            if (!$paramDocType->isArray()->yes()) {
                 continue;
             }
 
-            $valueAssertMethod = $this->matchTypeToAssertMethod($paramDocType->getItemType());
+            $valueAssertMethod = $this->matchTypeToAssertMethod($paramDocType->getIterableValueType());
 
             if (is_string($valueAssertMethod)) {
                 $assertStaticCallStmts[] = $this->createAssertExpression($param->var, $valueAssertMethod);
             }
 
-            $keyAssertMethod = $this->matchTypeToAssertMethod($paramDocType->getKeyType());
+            $keyAssertMethod = $this->matchTypeToAssertMethod($paramDocType->getIterableKeyType());
 
             if (is_string($keyAssertMethod)) {
                 $arrayKeys = new FuncCall(new Name('array_keys'), [new Arg($param->var)]);
@@ -183,7 +178,7 @@ final class AddAssertArrayFromClassMethodDocblockRector extends AbstractRector i
     }
 
     /**
-     * @param list<string> $configuration
+     * @param array<mixed> $configuration
      */
     public function configure(array $configuration): void
     {
@@ -217,28 +212,28 @@ final class AddAssertArrayFromClassMethodDocblockRector extends AbstractRector i
     {
         $standard = new Standard();
 
-        return array_filter($assertStaticCallStmts, static function (Expression $assertStaticCallExpression) use ($standard, $existingAssertCallHashes): bool {
+        return array_values(array_filter($assertStaticCallStmts, static function (Expression $assertStaticCallExpression) use ($standard, $existingAssertCallHashes): bool {
             $currentStaticCallHash = $standard->prettyPrintExpr($assertStaticCallExpression->expr);
 
             return !in_array($currentStaticCallHash, $existingAssertCallHashes, true);
-        });
+        }));
     }
 
     private function matchTypeToAssertMethod(Type $type): ?string
     {
-        if ($type instanceof IntegerType) {
+        if ($type->isInteger()->yes()) {
             return 'allInteger';
         }
 
-        if ($type instanceof StringType) {
+        if ($type->isString()->yes()) {
             return 'allString';
         }
 
-        if ($type instanceof FloatType) {
+        if ($type->isFloat()->yes()) {
             return 'allFloat';
         }
 
-        if ($type instanceof BooleanType) {
+        if ($type->isBoolean()->yes()) {
             return 'allBoolean';
         }
 

@@ -13,7 +13,6 @@ use PhpParser\Node\Identifier;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Function_;
 use PHPStan\Type\ArrayType;
-use PHPStan\Type\IntersectionType;
 use PHPStan\Type\MixedType;
 use Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfoFactory;
 use Rector\BetterPhpDocParser\PhpDocManipulator\PhpDocTypeChanger;
@@ -156,11 +155,11 @@ final class AddReturnArrayDocblockBasedOnArrayMapRector extends AbstractRector
         $functionLikePhpDocInfo = $this->phpDocInfoFactory->createFromNodeOrEmpty($node);
         $returnOriginalType = $functionLikePhpDocInfo->getReturnType();
 
-        if ($returnOriginalType instanceof ArrayType && !$returnOriginalType->getItemType() instanceof MixedType) {
+        if ($returnOriginalType->isArray()->yes() && !$returnOriginalType->getIterableValueType() instanceof MixedType) {
             return null;
         }
 
-        if ($returnOriginalType instanceof IntersectionType) {
+        if ($returnOriginalType->isList()->yes() || $returnOriginalType->isIterableAtLeastOnce()->yes()) {
             return null;
         }
 

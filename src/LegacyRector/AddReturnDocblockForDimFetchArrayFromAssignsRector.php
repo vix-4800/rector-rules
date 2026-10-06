@@ -11,9 +11,7 @@ use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Expression;
 use PhpParser\Node\Stmt\Return_;
-use PHPStan\Type\Constant\ConstantArrayType;
-use PHPStan\Type\Type;
-use PHPStan\Type\UnionType;
+use PHPStan\PhpDocParser\Ast\Type\UnionTypeNode;
 use Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfoFactory;
 use Rector\BetterPhpDocParser\PhpDocManipulator\PhpDocTypeChanger;
 use Rector\Rector\AbstractRector;
@@ -144,7 +142,7 @@ final class AddReturnDocblockForDimFetchArrayFromAssignsRector extends AbstractR
 
         $returnedExprType = $this->getType($soleReturn->expr);
 
-        if (!$this->isConstantArrayType($returnedExprType)) {
+        if (!$returnedExprType->isConstantArray()->yes()) {
             return null;
         }
 
@@ -164,30 +162,29 @@ final class AddReturnDocblockForDimFetchArrayFromAssignsRector extends AbstractR
             return null;
         }
 
-        // conditional assign
-        $genericUnionedTypeNodes = [];
+        $constantArrays = $returnedExprType->getConstantArrays();
+        $genericTypeNodes = [];
 
-        if ($returnedExprType instanceof UnionType) {
-            foreach ($returnedExprType->getTypes() as $unionedType) {
-                if ($unionedType instanceof ConstantArrayType) {
-                    // skip empty array
-                    if ($unionedType->getKeyTypes() === [] && $unionedType->getValueTypes() === []) {
-                        continue;
-                    }
-
-                    $genericUnionedTypeNode = $this->constantArrayTypeGeneralizer->generalize($unionedType);
-                    $genericUnionedTypeNodes[] = $genericUnionedTypeNode;
-                }
+        foreach ($constantArrays as $constantArray) {
+            // Other array branches already include the empty array.
+            if (count($constantArrays) > 1 && $constantArray->getKeyTypes() === []) {
+                continue;
             }
-        } else {
-            /** @var ConstantArrayType $returnedExprType */
-            $genericTypeNode = $this->constantArrayTypeGeneralizer->generalize($returnedExprType);
-            $this->phpDocTypeChanger->changeReturnTypeNode($node, $phpDocInfo, $genericTypeNode);
 
-            return $node;
+            $genericTypeNode = $this->constantArrayTypeGeneralizer->generalize($constantArray);
+            $genericTypeNodes[(string) $genericTypeNode] = $genericTypeNode;
         }
 
-        $this->phpDocTypeChanger->changeReturnTypeNode($node, $phpDocInfo, $genericUnionedTypeNodes[0]);
+        $genericTypeNodes = array_values($genericTypeNodes);
+
+        if ($genericTypeNodes === []) {
+            return null;
+        }
+
+        $returnTypeNode = count($genericTypeNodes) === 1
+            ? $genericTypeNodes[0]
+            : new UnionTypeNode($genericTypeNodes);
+        $this->phpDocTypeChanger->changeReturnTypeNode($node, $phpDocInfo, $returnTypeNode);
 
         return $node;
     }
@@ -222,24 +219,5 @@ final class AddReturnDocblockForDimFetchArrayFromAssignsRector extends AbstractR
         }
 
         return false;
-    }
-
-    private function isConstantArrayType(Type $returnedExprType): bool
-    {
-        if ($returnedExprType instanceof UnionType) {
-            $found = true;
-
-            foreach ($returnedExprType->getTypes() as $unionedType) {
-                if (!$unionedType instanceof ConstantArrayType) {
-                    $found = false;
-
-                    break;
-                }
-            }
-
-            return $found;
-        }
-
-        return $returnedExprType instanceof ConstantArrayType;
     }
 }

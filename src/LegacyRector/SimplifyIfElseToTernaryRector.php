@@ -97,13 +97,13 @@ final class SimplifyIfElseToTernaryRector extends AbstractRector
             return null;
         }
 
-        $ifAssignVarExpr = $this->resolveOnlyStmtAssignVar($node->stmts);
+        $ifAssignVarExpr = $this->resolveOnlyStmtAssignVar(array_values($node->stmts));
 
         if (!$ifAssignVarExpr instanceof Expr) {
             return null;
         }
 
-        $elseAssignExpr = $this->resolveOnlyStmtAssignVar($node->else->stmts);
+        $elseAssignExpr = $this->resolveOnlyStmtAssignVar(array_values($node->else->stmts));
 
         if (!$elseAssignExpr instanceof Expr) {
             return null;
@@ -113,8 +113,8 @@ final class SimplifyIfElseToTernaryRector extends AbstractRector
             return null;
         }
 
-        $ternaryIfExpr = $this->resolveOnlyStmtAssignExpr($node->stmts);
-        $expr = $this->resolveOnlyStmtAssignExpr($node->else->stmts);
+        $ternaryIfExpr = $this->resolveOnlyStmtAssignExpr(array_values($node->stmts));
+        $expr = $this->resolveOnlyStmtAssignExpr(array_values($node->else->stmts));
 
         if (!$ternaryIfExpr instanceof Expr) {
             return null;

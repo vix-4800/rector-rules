@@ -11,8 +11,6 @@ use PhpParser\Node\Expr\Ternary;
 use PhpParser\Node\Expr\Variable;
 use PHPStan\Type\ErrorType;
 use PHPStan\Type\MixedType;
-use PHPStan\Type\NullType;
-use PHPStan\Type\UnionType;
 use Rector\PHPStan\ScopeFetcher;
 use Rector\Rector\AbstractRector;
 use Rector\Tests\CodeQuality\Rector\Coalesce\CoalesceToTernaryRector\CoalesceToTernaryRectorTest;
@@ -78,16 +76,8 @@ final class CoalesceToTernaryRector extends AbstractRector
             return null;
         }
 
-        if ($nativeType instanceof NullType) {
+        if (!$nativeType->isNull()->no()) {
             return null;
-        }
-
-        if ($nativeType instanceof UnionType) {
-            foreach ($nativeType->getTypes() as $unionedType) {
-                if ($unionedType instanceof NullType) {
-                    return null;
-                }
-            }
         }
 
         if ($node->left instanceof Variable && !$scope->hasVariableType((string) $this->getName($node->left))->yes()) {

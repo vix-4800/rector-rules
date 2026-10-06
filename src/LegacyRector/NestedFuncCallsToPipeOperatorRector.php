@@ -163,7 +163,7 @@ final class NestedFuncCallsToPipeOperatorRector extends AbstractRector implement
             }
 
             // Spread argument can't be converted to pipe — keep the call as-is
-            if ($arg->unpack) {
+            if ($arg->unpack || $arg->name !== null) {
                 return null;
             }
 

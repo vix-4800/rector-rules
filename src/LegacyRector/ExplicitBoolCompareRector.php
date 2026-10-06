@@ -134,7 +134,7 @@ final class ExplicitBoolCompareRector extends AbstractRector
         }
 
         // handled by ObjectExplicitBoolCompareRector
-        if ($this->nodeTypeResolver->matchNullableTypeOfSpecificType($conditionNode, ObjectType::class) instanceof ObjectType) {
+        if ($this->nodeTypeResolver->matchNullableTypeOfSpecificType($conditionNode, ObjectType::class) !== null) {
             return null;
         }
 
@@ -222,11 +222,11 @@ final class ExplicitBoolCompareRector extends AbstractRector
         $value = $this->valueResolver->getValue($expr);
 
         // unknown value. may be from parameter
-        if ($value === null) {
+        if (!is_string($value)) {
             return $this->resolveZeroIdenticalString($identical, $isNegated, $expr);
         }
 
-        $length = mb_strlen((string) $value);
+        $length = mb_strlen($value);
 
         if ($length === 1) {
             $zeroString = new String_('0');
