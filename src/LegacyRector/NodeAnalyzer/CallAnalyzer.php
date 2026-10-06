@@ -14,7 +14,6 @@ use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Stmt\If_;
 use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\ReflectionProvider;
-use PHPStan\Type\ObjectType;
 use Rector\NodeTypeResolver\Node\AttributeKey;
 
 final class CallAnalyzer
@@ -88,11 +87,13 @@ final class CallAnalyzer
 
         $type = $scope->getNativeType($variable);
 
-        if (!$type instanceof ObjectType) {
+        $classNames = $type->getObjectClassNames();
+
+        if (!$type->isObject()->yes() || count($classNames) !== 1) {
             return false;
         }
 
-        $className = $type->getClassName();
+        $className = $classNames[0];
 
         if (!$this->reflectionProvider->hasClass($className)) {
             return false;

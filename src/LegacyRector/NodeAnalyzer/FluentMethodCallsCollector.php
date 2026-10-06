@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Vix\RectorRules\LegacyRector\NodeAnalyzer;
 
 use PhpParser\Node\Expr\MethodCall;
-use PHPStan\Type\ObjectType;
 use Rector\NodeTypeResolver\NodeTypeResolver;
 
 final class FluentMethodCallsCollector
@@ -47,13 +46,15 @@ final class FluentMethodCallsCollector
 
             $objectType = $this->nodeTypeResolver->getType($currentMethodCall->var);
 
-            if (!$objectType instanceof ObjectType) {
+            $classNames = $objectType->getObjectClassNames();
+
+            if (!$objectType->isObject()->yes() || count($classNames) !== 1) {
                 return [];
             }
 
             if ($classNameObjectType === null) {
-                $classNameObjectType = $objectType->getClassName();
-            } elseif ($classNameObjectType !== $objectType->getClassName()) {
+                $classNameObjectType = $classNames[0];
+            } elseif ($classNameObjectType !== $classNames[0]) {
                 return [];
             }
 
