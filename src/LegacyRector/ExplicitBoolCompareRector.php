@@ -1,0 +1,303 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Vix\RectorRules\LegacyRector;
+
+use PhpParser\Node;
+use PhpParser\Node\Expr;
+use PhpParser\Node\Expr\Assign;
+use PhpParser\Node\Expr\BinaryOp;
+use PhpParser\Node\Expr\BinaryOp\BooleanAnd;
+use PhpParser\Node\Expr\BinaryOp\BooleanOr;
+use PhpParser\Node\Expr\BinaryOp\Greater;
+use PhpParser\Node\Expr\BinaryOp\Identical;
+use PhpParser\Node\Expr\BinaryOp\NotIdentical;
+use PhpParser\Node\Expr\BooleanNot;
+use PhpParser\Node\Expr\Cast\Bool_;
+use PhpParser\Node\Expr\FuncCall;
+use PhpParser\Node\Expr\Ternary;
+use PhpParser\Node\Scalar\Float_;
+use PhpParser\Node\Scalar\Int_;
+use PhpParser\Node\Scalar\String_;
+use PhpParser\Node\Stmt;
+use PhpParser\Node\Stmt\ElseIf_;
+use PhpParser\Node\Stmt\Expression;
+use PhpParser\Node\Stmt\If_;
+use PHPStan\Type\MixedType;
+use PHPStan\Type\ObjectType;
+use Rector\NodeTypeResolver\TypeAnalyzer\ArrayTypeAnalyzer;
+use Rector\NodeTypeResolver\TypeAnalyzer\StringTypeAnalyzer;
+use Rector\PhpParser\Node\Value\ValueResolver;
+use Rector\Rector\AbstractRector;
+use Rector\Tests\CodeQuality\Rector\If_\ExplicitBoolCompareRector\ExplicitBoolCompareRectorTest;
+use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
+use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
+
+/**
+ * @see ExplicitBoolCompareRectorTest
+ */
+final class ExplicitBoolCompareRector extends AbstractRector
+{
+    /**
+     * @readonly
+     */
+    private StringTypeAnalyzer $stringTypeAnalyzer;
+
+    /**
+     * @readonly
+     */
+    private ArrayTypeAnalyzer $arrayTypeAnalyzer;
+
+    /**
+     * @readonly
+     */
+    private ValueResolver $valueResolver;
+
+    public function __construct(StringTypeAnalyzer $stringTypeAnalyzer, ArrayTypeAnalyzer $arrayTypeAnalyzer, ValueResolver $valueResolver)
+    {
+        $this->stringTypeAnalyzer = $stringTypeAnalyzer;
+        $this->arrayTypeAnalyzer = $arrayTypeAnalyzer;
+        $this->valueResolver = $valueResolver;
+    }
+
+    public function getRuleDefinition(): RuleDefinition
+    {
+        return new RuleDefinition('Make if conditions more explicit', [
+            new CodeSample(
+                <<<'CODE_SAMPLE'
+                    final class SomeController
+                    {
+                        public function run($items)
+                        {
+                            if (!count($items)) {
+                                return 'no items';
+                            }
+                        }
+                    }
+                    CODE_SAMPLE,
+                <<<'CODE_SAMPLE'
+                    final class SomeController
+                    {
+                        public function run($items)
+                        {
+                            if (count($items) === 0) {
+                                return 'no items';
+                            }
+                        }
+                    }
+                    CODE_SAMPLE
+            )]);
+    }
+
+    /**
+     * @return list<class-string<Node>>
+     */
+    public function getNodeTypes(): array
+    {
+        return [If_::class, ElseIf_::class, Ternary::class];
+    }
+
+    /**
+     * @param ElseIf_|If_|Ternary $node
+     *
+     * @return list<Stmt>|Node|null
+     */
+    public function refactor(Node $node): array|Node|null
+    {
+        // skip short ternary
+        if ($node instanceof Ternary && !$node->if instanceof Expr) {
+            return;
+        }
+
+        if ($node->cond instanceof BooleanNot) {
+            $conditionNode = $node->cond->expr;
+            $isNegated = true;
+        } else {
+            $conditionNode = $node->cond;
+            $isNegated = false;
+        }
+
+        if ($conditionNode instanceof Bool_) {
+            return;
+        }
+
+        $conditionStaticType = $this->nodeTypeResolver->getNativeType($conditionNode);
+
+        if ($conditionStaticType instanceof MixedType || $conditionStaticType->isBoolean()->yes()) {
+            return;
+        }
+
+        // handled by ArrayExplicitBoolCompareRector
+        if ($this->arrayTypeAnalyzer->isArrayType($conditionNode)) {
+            return;
+        }
+
+        // handled by ObjectExplicitBoolCompareRector
+        if ($this->nodeTypeResolver->matchNullableTypeOfSpecificType($conditionNode, ObjectType::class) instanceof ObjectType) {
+            return;
+        }
+
+        $binaryOp = $this->resolveNewConditionNode($conditionNode, $isNegated);
+
+        if (!$binaryOp instanceof Expr) {
+            return;
+        }
+
+        if ($node instanceof If_ && $node->cond instanceof Assign && $binaryOp->left instanceof NotIdentical && $binaryOp->right instanceof NotIdentical) {
+            $expression = new Expression($node->cond);
+            $binaryOp->left->left = $node->cond->var;
+            $binaryOp->right->left = $node->cond->var;
+            $node->cond = $binaryOp;
+
+            return [$expression, $node];
+        }
+
+        $node->cond = $binaryOp;
+
+        return $node;
+    }
+
+    private function resolveNewConditionNode(Expr $expr, bool $isNegated): ?BinaryOp
+    {
+        if ($expr instanceof FuncCall && $this->isName($expr, 'count')) {
+            return $this->resolveCount($isNegated, $expr);
+        }
+
+        if ($this->stringTypeAnalyzer->isStringOrUnionStringOnlyType($expr)) {
+            return $this->resolveString($isNegated, $expr);
+        }
+
+        $exprType = $this->getType($expr);
+
+        if ($exprType->isInteger()->yes()) {
+            return $this->resolveInteger($isNegated, $expr);
+        }
+
+        if ($exprType->isFloat()->yes()) {
+            return $this->resolveFloat($isNegated, $expr);
+        }
+
+        return null;
+    }
+
+    /**
+     * @param bool     $isNegated
+     * @param FuncCall $funcCall
+     *
+     * @return Greater|Identical|null
+     */
+    private function resolveCount(bool $isNegated, FuncCall $funcCall): Identical|Greater|null
+    {
+        if ($funcCall->isFirstClassCallable()) {
+            return;
+        }
+
+        $countedType = $this->getType($funcCall->getArgs()[0]->value);
+
+        if ($countedType->isArray()->yes()) {
+            return;
+        }
+
+        $int = new Int_(0);
+
+        // compare === 0, assumption
+        if ($isNegated) {
+            return new Identical($funcCall, $int);
+        }
+
+        return new Greater($funcCall, $int);
+    }
+
+    /**
+     * @param bool $isNegated
+     * @param Expr $expr
+     *
+     * @return BooleanAnd|BooleanOr|Identical|NotIdentical
+     */
+    private function resolveString(bool $isNegated, Expr $expr): Identical|NotIdentical|BooleanAnd|BooleanOr
+    {
+        $emptyString = new String_('');
+        $identical = $this->resolveIdentical($expr, $isNegated, $emptyString);
+        $value = $this->valueResolver->getValue($expr);
+
+        // unknown value. may be from parameter
+        if ($value === null) {
+            return $this->resolveZeroIdenticalString($identical, $isNegated, $expr);
+        }
+
+        $length = mb_strlen((string) $value);
+
+        if ($length === 1) {
+            $zeroString = new String_('0');
+
+            return $this->resolveIdentical($expr, $isNegated, $zeroString);
+        }
+
+        return $identical;
+    }
+
+    /**
+     * @param Expr    $expr
+     * @param bool    $isNegated
+     * @param String_ $string
+     *
+     * @return Identical|NotIdentical
+     */
+    private function resolveIdentical(Expr $expr, bool $isNegated, String_ $string): Identical|NotIdentical
+    {
+        /**
+         * // compare === ''
+         */
+        return $isNegated ? new Identical($expr, $string) : new NotIdentical($expr, $string);
+    }
+
+    /**
+     * @param Identical|NotIdentical $identical
+     * @param bool                   $isNegated
+     * @param Expr                   $expr
+     *
+     * @return BooleanAnd|BooleanOr
+     */
+    private function resolveZeroIdenticalString(Identical|NotIdentical $identical, bool $isNegated, Expr $expr): BooleanAnd|BooleanOr
+    {
+        $string = new String_('0');
+        $zeroIdentical = $isNegated ? new Identical($expr, $string) : new NotIdentical($expr, $string);
+
+        return $isNegated ? new BooleanOr($identical, $zeroIdentical) : new BooleanAnd($identical, $zeroIdentical);
+    }
+
+    /**
+     * @param bool $isNegated
+     * @param Expr $expr
+     *
+     * @return Identical|NotIdentical
+     */
+    private function resolveInteger(bool $isNegated, Expr $expr): Identical|NotIdentical
+    {
+        $int = new Int_(0);
+
+        if ($isNegated) {
+            return new Identical($expr, $int);
+        }
+
+        return new NotIdentical($expr, $int);
+    }
+
+    /**
+     * @param bool $isNegated
+     * @param Expr $expr
+     *
+     * @return Identical|NotIdentical
+     */
+    private function resolveFloat(bool $isNegated, Expr $expr): Identical|NotIdentical
+    {
+        $float = new Float_(0.0);
+
+        if ($isNegated) {
+            return new Identical($expr, $float);
+        }
+
+        return new NotIdentical($expr, $float);
+    }
+}
