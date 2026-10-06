@@ -174,7 +174,7 @@ final class ExactCompareFactory
             $compareExprs[] = $identical ? $this->createIdenticalFalsyCompare($unionedType, $expr, $treatAsNonEmpty) : $this->createNotIdenticalFalsyCompare($unionedType, $expr, $treatAsNonEmpty);
         }
 
-        return array_unique($compareExprs, SORT_REGULAR);
+        return array_values(array_unique($compareExprs, SORT_REGULAR));
     }
 
     private function cleanUpPossibleNullableUnionType(UnionType $unionType): Type
