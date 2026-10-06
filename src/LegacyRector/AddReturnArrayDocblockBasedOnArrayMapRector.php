@@ -118,34 +118,34 @@ final class AddReturnArrayDocblockBasedOnArrayMapRector extends AbstractRector
         $returnsScoped = $this->betterNodeFinder->findReturnsScoped($node);
 
         if ($this->hasNonArrayReturnType($node)) {
-            return;
+            return null;
         }
 
         // nothing to return? skip it
         if ($returnsScoped === []) {
-            return;
+            return null;
         }
 
         // only returns with expr and no void
         if (!$this->returnAnalyzer->hasOnlyReturnWithExpr($node, $returnsScoped)) {
-            return;
+            return null;
         }
 
         $closureReturnTypes = [];
 
         foreach ($returnsScoped as $returnScoped) {
             if (!$returnScoped->expr instanceof FuncCall) {
-                return;
+                return null;
             }
 
             $arrayMapClosure = $this->matchArrayMapClosure($returnScoped->expr);
 
             if (!$arrayMapClosure instanceof FunctionLike) {
-                return;
+                return null;
             }
 
             if (!$arrayMapClosure->returnType instanceof Node) {
-                return;
+                return null;
             }
 
             $closureReturnTypes[] = $this->staticTypeMapper->mapPhpParserNodePHPStanType($arrayMapClosure->returnType);
@@ -157,11 +157,11 @@ final class AddReturnArrayDocblockBasedOnArrayMapRector extends AbstractRector
         $returnOriginalType = $functionLikePhpDocInfo->getReturnType();
 
         if ($returnOriginalType instanceof ArrayType && !$returnOriginalType->getItemType() instanceof MixedType) {
-            return;
+            return null;
         }
 
         if ($returnOriginalType instanceof IntersectionType) {
-            return;
+            return null;
         }
 
         $hasChanged = $this->phpDocTypeChanger->changeReturnType($node, $functionLikePhpDocInfo, $arrayType);
@@ -169,6 +169,8 @@ final class AddReturnArrayDocblockBasedOnArrayMapRector extends AbstractRector
         if ($hasChanged) {
             return $node;
         }
+
+        return null;
     }
 
     /**
@@ -191,18 +193,18 @@ final class AddReturnArrayDocblockBasedOnArrayMapRector extends AbstractRector
     private function matchArrayMapClosure(FuncCall $funcCall): Closure|ArrowFunction|null
     {
         if (!$this->isName($funcCall, 'array_map')) {
-            return;
+            return null;
         }
 
         if ($funcCall->isFirstClassCallable()) {
-            return;
+            return null;
         }
 
         // lets infer strict array_map() type
         $firstArg = $funcCall->getArgs()[0];
 
         if (!$firstArg->value instanceof Closure && !$firstArg->value instanceof ArrowFunction) {
-            return;
+            return null;
         }
 
         return $firstArg->value;

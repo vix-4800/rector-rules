@@ -56,6 +56,8 @@ final class ScalarValueToConstFetchRector extends AbstractRector implements Conf
                 return $scalarValueToConstFetch->getConstFetch();
             }
         }
+
+        return null;
     }
 
     public function configure(array $configuration): void

@@ -107,7 +107,7 @@ final class ExplicitBoolCompareRector extends AbstractRector
     {
         // skip short ternary
         if ($node instanceof Ternary && !$node->if instanceof Expr) {
-            return;
+            return null;
         }
 
         if ($node->cond instanceof BooleanNot) {
@@ -119,29 +119,29 @@ final class ExplicitBoolCompareRector extends AbstractRector
         }
 
         if ($conditionNode instanceof Bool_) {
-            return;
+            return null;
         }
 
         $conditionStaticType = $this->nodeTypeResolver->getNativeType($conditionNode);
 
         if ($conditionStaticType instanceof MixedType || $conditionStaticType->isBoolean()->yes()) {
-            return;
+            return null;
         }
 
         // handled by ArrayExplicitBoolCompareRector
         if ($this->arrayTypeAnalyzer->isArrayType($conditionNode)) {
-            return;
+            return null;
         }
 
         // handled by ObjectExplicitBoolCompareRector
         if ($this->nodeTypeResolver->matchNullableTypeOfSpecificType($conditionNode, ObjectType::class) instanceof ObjectType) {
-            return;
+            return null;
         }
 
         $binaryOp = $this->resolveNewConditionNode($conditionNode, $isNegated);
 
         if (!$binaryOp instanceof Expr) {
-            return;
+            return null;
         }
 
         if ($node instanceof If_ && $node->cond instanceof Assign && $binaryOp->left instanceof NotIdentical && $binaryOp->right instanceof NotIdentical) {
@@ -190,13 +190,13 @@ final class ExplicitBoolCompareRector extends AbstractRector
     private function resolveCount(bool $isNegated, FuncCall $funcCall): Identical|Greater|null
     {
         if ($funcCall->isFirstClassCallable()) {
-            return;
+            return null;
         }
 
         $countedType = $this->getType($funcCall->getArgs()[0]->value);
 
         if ($countedType->isArray()->yes()) {
-            return;
+            return null;
         }
 
         $int = new Int_(0);
