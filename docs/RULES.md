@@ -12,9 +12,40 @@ Each configurable rule documents its parameters in its section.
   - [CollapseSequentialStrReplaceRector](#collapsesequentialstrreplacerector)
   - [ExtractAssignmentFromIfConditionRector](#extractassignmentfromifconditionrector)
   - [Legacy Rector](#legacy-rector)
+    - [AddAssertArrayFromClassMethodDocblockRector](#addassertarrayfromclassmethoddocblockrector)
+    - [AddInterfaceByTraitRector](#addinterfacebytraitrector)
+    - [AddParamArrayDocblockBasedOnArrayMapRector](#addparamarraydocblockbasedonarraymaprector)
+    - [AddReturnArrayDocblockBasedOnArrayMapRector](#addreturnarraydocblockbasedonarraymaprector)
+    - [AddReturnDocblockForDimFetchArrayFromAssignsRector](#addreturndocblockfordimfetcharrayfromassignsrector)
+    - [AddSensitiveParameterAttributeRector](#addsensitiveparameterattributerector)
+    - [ChangeNestedForeachIfsToEarlyContinueRector](#changenestedforeachifstoearlycontinuerector)
+    - [ChangeNestedIfsToEarlyReturnRector](#changenestedifstoearlyreturnrector)
+    - [ChangeOrIfContinueToMultiContinueRector](#changeorifcontinuetomulticontinuerector)
+    - [CoalesceToTernaryRector](#coalescetoternaryrector)
+    - [CombineIfRector](#combineifrector)
+    - [ConfiguredMockEntityToSetterObjectRector](#configuredmockentitytosetterobjectrector)
+    - [ConstAndTraitDeprecatedAttributeRector](#constandtraitdeprecatedattributerector)
     - [CountArrayToEmptyArrayComparisonRector](#countarraytoemptyarraycomparisonrector)
+    - [DeprecatedAnnotationToDeprecatedAttributeRector](#deprecatedannotationtodeprecatedattributerector)
+    - [DisallowedEmptyRuleFixerRector](#disallowedemptyrulefixerrector)
+    - [ExplicitBoolCompareRector](#explicitboolcomparerector)
+    - [FluentSettersToStandaloneCallMethodRector](#fluentsetterstostandalonecallmethodrector)
+    - [FuncCallToMethodCallRector](#funccalltomethodcallrector)
+    - [JsonThrowOnErrorRector](#jsonthrowonerrorrector)
+    - [NestedFuncCallsToPipeOperatorRector](#nestedfunccallstopipeoperatorrector)
     - [NestedTernaryToMatchRector](#nestedternarytomatchrector)
+    - [NewInInitializerRector](#newininitializerrector)
+    - [PropertyHookRector](#propertyhookrector)
+    - [RemoveAnnotationRector](#removeannotationrector)
+    - [RemoveNamedArgsInDataProviderRector](#removenamedargsindataproviderrector)
+    - [RenameDeprecatedMethodCallRector](#renamedeprecatedmethodcallrector)
     - [ReplaceTestFunctionPrefixWithAttributeRector](#replacetestfunctionprefixwithattributerector)
+    - [ReturnBinaryOrToEarlyReturnRector](#returnbinaryortoearlyreturnrector)
+    - [ScalarValueToConstFetchRector](#scalarvaluetoconstfetchrector)
+    - [SequentialAssignmentsToPipeOperatorRector](#sequentialassignmentstopipeoperatorrector)
+    - [ShortenElseIfRector](#shortenelseifrector)
+    - [SimplifyIfElseToTernaryRector](#simplifyifelsetoternaryrector)
+    - [SwitchNegatedTernaryRector](#switchnegatedternaryrector)
   - [NullableBoolReturnToFalseRector](#nullableboolreturntofalserector)
   - [ReplaceMultipleEqualWithInArrayRector](#replacemultipleequalwithinarrayrector)
   - [Yii2](#yii2)
@@ -117,6 +148,517 @@ Parameters: none.
 
 ## Legacy Rector
 
+All rules below use the `Vix\RectorRules\LegacyRector` namespace. Register the restored rules individually in your Rector configuration.
+
+### AddAssertArrayFromClassMethodDocblockRector
+
+Adds runtime assertions for array elements and supported key types inferred from class-method `@param` annotations. It supports Webmozart Assert and beberlei/assert, and skips assertions that already exist. The selected assertion library must be available in the code being refactored.
+
+**Before**
+
+```php
+final class SimpleArray
+{
+    /**
+     * @param int[] $items
+     */
+    public function run(array $items)
+    {
+    }
+}
+```
+
+**After**
+
+```php
+final class SimpleArray
+{
+    /**
+     * @param int[] $items
+     */
+    public function run(array $items)
+    {
+        \Webmozart\Assert\Assert::allInteger($items);
+    }
+}
+```
+
+Parameters:
+
+- Assertion library (`list<string>`, default: Webmozart Assert) — an empty configuration uses the default. Otherwise supply exactly one of `AssertClassName::WEBMOZART` or `AssertClassName::BEBERLEI`.
+
+```php
+use Rector\Config\RectorConfig;
+use Vix\RectorRules\LegacyRector\AddAssertArrayFromClassMethodDocblockRector;
+use Vix\RectorRules\LegacyRector\Enum\AssertClassName;
+
+return RectorConfig::configure()
+    ->withConfiguredRule(AddAssertArrayFromClassMethodDocblockRector::class, [
+        AssertClassName::BEBERLEI,
+    ]);
+```
+
+### AddInterfaceByTraitRector
+
+Adds a configured interface to a class that uses a matching trait. Classes already implementing the interface, including through an inherited interface, are left unchanged.
+
+**Before**
+
+```php
+use App\SomeTrait;
+
+class SomeClass
+{
+    use SomeTrait;
+}
+```
+
+**After**
+
+```php
+use App\SomeTrait;
+
+class SomeClass implements \App\SomeInterface
+{
+    use SomeTrait;
+}
+```
+
+Parameters:
+
+- Trait-to-interface mappings (`array<class-string, class-string>`, default: `[]`) — each trait class name maps to the interface to add.
+
+```php
+use Rector\Config\RectorConfig;
+use Vix\RectorRules\LegacyRector\AddInterfaceByTraitRector;
+
+return RectorConfig::configure()
+    ->withConfiguredRule(AddInterfaceByTraitRector::class, [
+        App\SomeTrait::class => App\SomeInterface::class,
+    ]);
+```
+
+### AddParamArrayDocblockBasedOnArrayMapRector
+
+Adds or refines a class-method array parameter annotation using the declared parameter type of an `array_map()` callback. Existing useful element types are preserved.
+
+**Before**
+
+```php
+final class SomeClass
+{
+    public function run(array $items): void
+    {
+        array_map(fn (string $item) => trim($item), $items);
+    }
+}
+```
+
+**After**
+
+```php
+final class SomeClass
+{
+    /**
+     * @param string[] $items
+     */
+    public function run(array $items): void
+    {
+        array_map(fn (string $item) => trim($item), $items);
+    }
+}
+```
+
+Parameters: none.
+
+### AddReturnArrayDocblockBasedOnArrayMapRector
+
+Adds or refines an array return annotation using the declared return types of closures or arrow functions passed to returned `array_map()` calls. It supports functions and class methods, and preserves existing useful return annotations.
+
+**Before**
+
+```php
+final class ImproveSimpleArray
+{
+    /**
+     * @return array
+     */
+    public function process(array $items)
+    {
+        return array_map(function ($item): int {
+            return $item;
+        }, $items);
+    }
+}
+```
+
+**After**
+
+```php
+final class ImproveSimpleArray
+{
+    /**
+     * @return int[]
+     */
+    public function process(array $items)
+    {
+        return array_map(function ($item): int {
+            return $item;
+        }, $items);
+    }
+}
+```
+
+Parameters: none.
+
+### AddReturnDocblockForDimFetchArrayFromAssignsRector
+
+Adds a generic `@return` annotation for a class method that builds an array using indexed assignments and returns that variable. It infers key and value types, including conditional assignments, while preserving existing useful annotations and the native return type.
+
+**Before**
+
+```php
+final class ConditionalAssign
+{
+    public function toArray(): array
+    {
+        $items = [];
+
+        if (mt_rand(0, 1)) {
+            $items['key'] = 100;
+        }
+
+        return $items;
+    }
+}
+```
+
+**After**
+
+```php
+final class ConditionalAssign
+{
+    /**
+     * @return array<string, int>
+     */
+    public function toArray(): array
+    {
+        $items = [];
+
+        if (mt_rand(0, 1)) {
+            $items['key'] = 100;
+        }
+
+        return $items;
+    }
+}
+```
+
+Parameters: none.
+
+### AddSensitiveParameterAttributeRector
+
+Adds `#[SensitiveParameter]` to function and method parameters whose names appear in the configuration. Existing attributes are preserved without duplication. Requires PHP 8.2 or newer.
+
+**Before**
+
+```php
+function login(string $username, string $password): void
+{
+}
+```
+
+**After**
+
+```php
+function login(string $username, #[\SensitiveParameter] string $password): void
+{
+}
+```
+
+Parameters:
+
+- `sensitive_parameters` (`list<string>`, default: `[]`) — parameter names to mark, such as `password` or `token`.
+
+```php
+use Rector\Config\RectorConfig;
+use Vix\RectorRules\LegacyRector\AddSensitiveParameterAttributeRector;
+
+return RectorConfig::configure()
+    ->withConfiguredRule(AddSensitiveParameterAttributeRector::class, [
+        AddSensitiveParameterAttributeRector::SENSITIVE_PARAMETERS => ['password'],
+    ]);
+```
+
+### ChangeNestedForeachIfsToEarlyContinueRector
+
+Flattens supported nested `if` statements inside a `foreach` by inverting the conditions and inserting early `continue` statements. The original loop body follows the guards; unsupported nesting and branches are left unchanged.
+
+**Before**
+
+```php
+class Fixture
+{
+    public function run()
+    {
+        $items = [];
+
+        foreach ($values as $value) {
+            if ($value === 5) {
+                if ($value2 === 10) {
+                    $items[] = 'maybe';
+                }
+            }
+        }
+    }
+}
+```
+
+**After**
+
+```php
+class Fixture
+{
+    public function run()
+    {
+        $items = [];
+
+        foreach ($values as $value) {
+            if ($value !== 5) {
+                continue;
+            }
+            if ($value2 !== 10) {
+                continue;
+            }
+            $items[] = 'maybe';
+        }
+    }
+}
+```
+
+Parameters: none.
+
+### ChangeNestedIfsToEarlyReturnRector
+
+Flattens nested return-only conditions by inverting the outer condition and using the following return as an early fallback. A single `if` and unsupported branches are left unchanged.
+
+**Before**
+
+```php
+class Fixture
+{
+    public function run()
+    {
+        if ($value === 5) {
+            if ($value2 === 10) {
+                return 'yes';
+            }
+        }
+
+        return 'no';
+    }
+}
+```
+
+**After**
+
+```php
+class Fixture
+{
+    public function run()
+    {
+        if ($value !== 5) {
+            return 'no';
+        }
+        if ($value2 === 10) {
+            return 'yes';
+        }
+
+        return 'no';
+    }
+}
+```
+
+Parameters: none.
+
+### ChangeOrIfContinueToMultiContinueRector
+
+Splits a supported `if` condition joined with `||` and containing only `continue` into separate guards. It preserves the order of checks and the original continue level.
+
+**Before**
+
+```php
+class Fixture
+{
+    public function canDrive(Car $newCar)
+    {
+        foreach ($cars as $car) {
+            if ($car->hasWheels() || $car->hasFuel()) {
+                continue;
+            }
+            $car->setWheel($newCar->wheel);
+            $car->setFuel($newCar->fuel);
+        }
+    }
+}
+```
+
+**After**
+
+```php
+class Fixture
+{
+    public function canDrive(Car $newCar)
+    {
+        foreach ($cars as $car) {
+            if ($car->hasWheels()) {
+                continue;
+            }
+            if ($car->hasFuel()) {
+                continue;
+            }
+            $car->setWheel($newCar->wheel);
+            $car->setFuel($newCar->fuel);
+        }
+    }
+}
+```
+
+Parameters: none.
+
+### CoalesceToTernaryRector
+
+Replaces `??` with the short ternary `?:` when the left operand has a native non-nullable type. Array offsets, nullable or mixed types, and undefined variables are skipped. This changes the result for falsy values such as an empty string or `0`, which select the fallback after conversion.
+
+**Before**
+
+```php
+class NonNullableLeft
+{
+    public function run(string $name)
+    {
+        return $name ?? 'tom';
+    }
+}
+```
+
+**After**
+
+```php
+class NonNullableLeft
+{
+    public function run(string $name)
+    {
+        return $name ?: 'tom';
+    }
+}
+```
+
+Parameters: none.
+
+### CombineIfRector
+
+Combines supported nested `if` statements into a single condition joined with `&&`. The outer block must contain only the nested condition; branches with `else` or `elseif` are skipped.
+
+**Before**
+
+```php
+class Fixture
+{
+    public function run()
+    {
+        if ($cond1) {
+            if ($cond2) {
+                return 'foo';
+            }
+        }
+    }
+}
+```
+
+**After**
+
+```php
+class Fixture
+{
+    public function run()
+    {
+        if ($cond1 && $cond2) {
+            return 'foo';
+        }
+    }
+}
+```
+
+Parameters: none.
+
+### ConfiguredMockEntityToSetterObjectRector
+
+Replaces `createConfiguredMock()` for a concrete Doctrine entity or document inside a PHPUnit test class with a real instance and setter calls derived from configured getters. It also handles a directly returned mock. Keys without a `get` prefix are omitted, and setter existence is not checked; the generated code executes the real constructor and setters.
+
+**Before**
+
+```php
+use App\SomeEntityToBeConfigured;
+
+final class SomeTest extends \PHPUnit\Framework\TestCase
+{
+    public function test()
+    {
+        $mockObject = $this->createConfiguredMock(SomeEntityToBeConfigured::class, [
+            'getName' => 'John',
+        ]);
+    }
+}
+```
+
+**After**
+
+```php
+use App\SomeEntityToBeConfigured;
+
+final class SomeTest extends \PHPUnit\Framework\TestCase
+{
+    public function test()
+    {
+        $mockObject = new \App\SomeEntityToBeConfigured();
+        $mockObject->setName('John');
+    }
+}
+```
+
+Parameters: none.
+
+### ConstAndTraitDeprecatedAttributeRector
+
+Replaces `@deprecated` annotations on global constants and traits with `#[Deprecated]`. A leading version becomes `since`, and the remaining description becomes `message`. Other PHPDoc tags are preserved. Requires PHP 8.5 or newer.
+
+**Before**
+
+```php
+/**
+ * @deprecated use new constant
+ */
+const CONSTANT = 'some reason';
+
+/**
+ * @deprecated 2.0.0 do not use
+ */
+const UNUSED = 'ignored';
+```
+
+**After**
+
+```php
+#[\Deprecated(message: 'use new constant')]
+const CONSTANT = 'some reason';
+
+#[\Deprecated(message: 'do not use', since: '2.0.0')]
+const UNUSED = 'ignored';
+```
+
+Parameters: none.
+
 ### CountArrayToEmptyArrayComparisonRector
 
 Replaces supported `count()` checks on expressions with a native `array` type by comparison with `[]`. It supports zero comparisons and `if`/`elseif` truthiness checks, while leaving `Countable` objects and `while` conditions unchanged.
@@ -141,6 +683,283 @@ function hasItems(array $items): bool
 
 Parameters: none.
 
+### DeprecatedAnnotationToDeprecatedAttributeRector
+
+Replaces `@deprecated` annotations on functions, methods, and class constants with `#[Deprecated]`, carrying over the message and an optional version. Other PHPDoc tags are preserved. Uses the PHP 8.4 attribute, which can emit runtime deprecation notices rather than only informing static analysis.
+
+**Before**
+
+```php
+final class Fixture
+{
+    /**
+     * @deprecated use new constant.
+     */
+    public const CONSTANT = 'some reason.';
+
+    /**
+     * @deprecated 1.0.1 use new method.
+     */
+    public function run()
+    {
+    }
+}
+```
+
+**After**
+
+```php
+final class Fixture
+{
+    #[\Deprecated(message: 'use new constant.')]
+    public const CONSTANT = 'some reason.';
+
+    #[\Deprecated(message: 'use new method.', since: '1.0.1')]
+    public function run()
+    {
+    }
+}
+```
+
+Parameters: none.
+
+### DisallowedEmptyRuleFixerRector
+
+Replaces supported `empty()` and `!empty()` checks with strict comparisons derived from the native value type. It adds `isset()` guards where needed for uninitialized properties or supported negated array-offset checks. Unknown types and unsupported expressions are left unchanged.
+
+**Before**
+
+```php
+final class SomeEmptyArray
+{
+    public function run(array $items)
+    {
+        return empty($items);
+    }
+}
+```
+
+**After**
+
+```php
+final class SomeEmptyArray
+{
+    public function run(array $items)
+    {
+        return $items === [];
+    }
+}
+```
+
+Parameters:
+
+- `treat_as_non_empty` (bool, default: `false`) — when `true`, treats the string `'0'` as non-empty, so a non-nullable string check uses only `=== ''` or `!== ''`. Nullable scalar checks can also simplify to a null comparison.
+
+```php
+use Rector\Config\RectorConfig;
+use Vix\RectorRules\LegacyRector\DisallowedEmptyRuleFixerRector;
+
+return RectorConfig::configure()
+    ->withConfiguredRule(DisallowedEmptyRuleFixerRector::class, [
+        DisallowedEmptyRuleFixerRector::TREAT_AS_NON_EMPTY => true,
+    ]);
+```
+
+### ExplicitBoolCompareRector
+
+Replaces scalar truthiness checks in `if`, `elseif`, and long ternaries with explicit comparisons. Strings account for both an empty string and `'0'`; integers and floats are compared with zero. Native booleans, mixed types, arrays, and supported object conditions are skipped.
+
+**Before**
+
+```php
+final class ExplicitString
+{
+    public function run(string $item)
+    {
+        if (!$item) {
+            return 'empty';
+        }
+
+        if ($item) {
+            return 'not empty';
+        }
+    }
+}
+```
+
+**After**
+
+```php
+final class ExplicitString
+{
+    public function run(string $item)
+    {
+        if ($item === '' || $item === '0') {
+            return 'empty';
+        }
+
+        if ($item !== '' && $item !== '0') {
+            return 'not empty';
+        }
+    }
+}
+```
+
+Parameters: none.
+
+### FluentSettersToStandaloneCallMethodRector
+
+Splits supported fluent setter chains into standalone calls on the same object. When a newly created object is returned, it introduces a variable and returns it after the setters. Chains involving getters or unsupported object types are skipped.
+
+**Before**
+
+```php
+use App\SomeSetterClass;
+
+final class SomeClass
+{
+    public function setup()
+    {
+        return (new SomeSetterClass())
+            ->setName('John')
+            ->setSurname('Doe');
+    }
+}
+```
+
+**After**
+
+```php
+use App\SomeSetterClass;
+
+final class SomeClass
+{
+    public function setup()
+    {
+        $someSetterClass = new SomeSetterClass();
+        $someSetterClass->setName('John');
+        $someSetterClass->setSurname('Doe');
+        return $someSetterClass;
+    }
+}
+```
+
+Parameters: none.
+
+### FuncCallToMethodCallRector
+
+Replaces configured function calls inside instance methods with calls to a service method. It reuses a matching dependency or adds one through constructor injection. Static and abstract methods are skipped.
+
+**Before**
+
+```php
+final class Fixture
+{
+    public function run()
+    {
+        $result = \translate('name');
+    }
+}
+```
+
+**After**
+
+```php
+final class Fixture
+{
+    public function __construct(private \App\SomeTranslator $someTranslator)
+    {
+    }
+
+    public function run()
+    {
+        $result = $this->someTranslator->translateMethod('name');
+    }
+}
+```
+
+Parameters:
+
+- Function mappings (`list<FuncCallToMethodCall>`, default: `[]`) — each value object specifies the old function name, the service class, and the new method name. The example maps `translate()` to `App\SomeTranslator::translateMethod()`.
+
+```php
+use Rector\Config\RectorConfig;
+use Rector\Transform\ValueObject\FuncCallToMethodCall;
+use Vix\RectorRules\LegacyRector\FuncCallToMethodCallRector;
+
+return RectorConfig::configure()
+    ->withConfiguredRule(FuncCallToMethodCallRector::class, [
+        new FuncCallToMethodCall('translate', App\SomeTranslator::class, 'translateMethod'),
+    ]);
+```
+
+### JsonThrowOnErrorRector
+
+Adds `JSON_THROW_ON_ERROR` to supported `json_encode()` and `json_decode()` calls, combining it with existing constant flags and supplying missing decode defaults. Calls using named arguments, first-class callables, or statically resolved string/array inputs are skipped, as are enclosing statements containing `json_last_error()` or `json_last_error_msg()`. Errors then throw `JsonException` instead of returning `false` or `null`.
+
+**Before**
+
+```php
+json_encode($content);
+json_decode($json);
+```
+
+**After**
+
+```php
+json_encode($content, JSON_THROW_ON_ERROR);
+json_decode($json, null, 512, JSON_THROW_ON_ERROR);
+```
+
+Parameters: none.
+
+### NestedFuncCallsToPipeOperatorRector
+
+Converts supported nested function calls in assignments or returns into a PHP 8.5 pipe chain. The inner value becomes the initial operand, and the functions run from the innermost call outward. Unsupported argument layouts and chains below the configured depth are skipped.
+
+**Before**
+
+```php
+final class NestedFunctions
+{
+    public function run()
+    {
+        $result = trim(strtolower(htmlspecialchars('  Hello World!  ')));
+    }
+}
+```
+
+**After**
+
+```php
+final class NestedFunctions
+{
+    public function run()
+    {
+        $result = '  Hello World!  '
+            |> htmlspecialchars(...)
+            |> strtolower(...)
+            |> trim(...);
+    }
+}
+```
+
+Parameters:
+
+- `minimum_depth` (int, default: `2`, minimum: `2`) — minimum number of nested calls required for a pipe chain.
+
+```php
+use Rector\Config\RectorConfig;
+use Rector\ValueObject\PhpVersion;
+use Vix\RectorRules\LegacyRector\NestedFuncCallsToPipeOperatorRector;
+
+return RectorConfig::configure()
+    ->withPhpVersion(PhpVersion::PHP_85)
+    ->withConfiguredRule(NestedFuncCallsToPipeOperatorRector::class, [
+        NestedFuncCallsToPipeOperatorRector::MINIMUM_DEPTH => 3,
+    ]);
+```
+
 ### NestedTernaryToMatchRector
 
 Converts a nested long ternary assigned to a variable into `match`. When every condition is a strict comparison of the same variable, the variable becomes the match subject; otherwise the rule emits `match (true)` only for native boolean conditions. Short ternaries and non-boolean truthiness checks are skipped.
@@ -159,6 +978,180 @@ $result = match ($status) {
     'disabled' => 'off',
     default => 'unknown',
 };
+```
+
+Parameters: none.
+
+### NewInInitializerRector
+
+Moves a constructor assignment such as `$this->logger = $logger ?? new NullLogger` into a `new` parameter default and promotes the matching property. It preserves property visibility and attributes, and skips unsupported constructor contracts, complex initializers, or parameters used later. Requires PHP 8.1 or newer. Explicit `null` no longer triggers the original fallback assignment.
+
+**Before**
+
+```php
+class SomeClass
+{
+    private Logger $logger;
+
+    public function __construct(
+        ?Logger $logger = null,
+    ) {
+        $this->logger = $logger ?? new NullLogger;
+    }
+}
+```
+
+**After**
+
+```php
+class SomeClass
+{
+    public function __construct(private ?Logger $logger = new NullLogger)
+    {
+    }
+}
+```
+
+Parameters: none.
+
+### PropertyHookRector
+
+Replaces supported single-statement getters and setters with public property hooks in final classes. Readonly properties or classes, magic accessors, attributed methods, and inherited method contracts are skipped. Requires PHP 8.4 or newer. Getter/setter methods are removed; their callers need property access.
+
+**Before**
+
+```php
+final class SomeFixture
+{
+    private string $name;
+
+    public function getName(): string
+    {
+        return $this->name;
+    }
+
+    public function setName(string $name): void
+    {
+        $this->name = ucfirst($name);
+    }
+}
+```
+
+**After**
+
+```php
+final class SomeFixture
+{
+    public string $name {
+        get => $this->name;
+        set(string $name) {
+            $this->name = ucfirst($name);
+        }
+    }
+}
+```
+
+Parameters: none.
+
+### RemoveAnnotationRector
+
+Removes configured PHPDoc tags from classes, functions, methods, properties, and class constants. It accepts tag names, resolved annotation names, or PHPDoc tag-value classes, and preserves unrelated tags.
+
+**Before**
+
+```php
+/**
+ * @method getName()
+ */
+final class Fixture
+{
+}
+```
+
+**After**
+
+```php
+final class Fixture
+{
+}
+```
+
+Parameters:
+
+- Annotation names (`list<string>`, required) — at least one tag or annotation name to remove. The example removes `@method` tags.
+
+```php
+use Rector\Config\RectorConfig;
+use Vix\RectorRules\LegacyRector\RemoveAnnotationRector;
+
+return RectorConfig::configure()
+    ->withConfiguredRule(RemoveAnnotationRector::class, ['method']);
+```
+
+### RemoveNamedArgsInDataProviderRector
+
+Removes argument-array keys from recognized PHPUnit data providers so values are supplied positionally. Providers referenced through PHPDoc or `#[DataProvider]` are supported. Named yielded datasets retain their labels; unreferenced providers and non-test classes are skipped.
+
+**Before**
+
+```php
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\TestCase;
+
+final class AttributeDataProvider extends TestCase
+{
+    #[DataProvider('provideValues')]
+    public function testValue(int $value, string $label): void
+    {
+        self::assertGreaterThan(0, $value);
+    }
+
+    public static function provideValues(): iterable
+    {
+        yield 'first case' => ['value' => 100, 'label' => 'first'];
+        yield 'second case' => ['value' => 200, 'label' => 'second'];
+    }
+}
+```
+
+**After**
+
+```php
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\TestCase;
+
+final class AttributeDataProvider extends TestCase
+{
+    #[DataProvider('provideValues')]
+    public function testValue(int $value, string $label): void
+    {
+        self::assertGreaterThan(0, $value);
+    }
+
+    public static function provideValues(): iterable
+    {
+        yield 'first case' => [100, 'first'];
+        yield 'second case' => [200, 'second'];
+    }
+}
+```
+
+Parameters: none.
+
+### RenameDeprecatedMethodCallRector
+
+Renames instance and static method calls when the target method is deprecated and its description suggests an existing, non-deprecated method on the same class. Supported suggestions include `Use newMethod()`, `replaced by newMethod()`, and `{@see newMethod()}`. Cross-class suggestions, magic methods, dynamic names, and first-class callables are skipped. In this example, `getData()` is annotated with `@deprecated Use fetchData() instead` and `fetchData()` exists on the same class.
+
+**Before**
+
+```php
+$data = $apiClient->getData();
+```
+
+**After**
+
+```php
+$data = $apiClient->fetchData();
 ```
 
 Parameters: none.
@@ -188,6 +1181,198 @@ final class CalculatorTest extends \PHPUnit\Framework\TestCase
     public function onePlusOneShouldBeTwo(): void
     {
         $this->assertSame(2, 1 + 1);
+    }
+}
+```
+
+Parameters: none.
+
+### ReturnBinaryOrToEarlyReturnRector
+
+Splits supported `return` expressions joined with `||` into early `return true` guards and a final return. The remaining expression is cast to `bool` when its type does not already ensure a boolean result. Unsupported expressions without a matching object call are skipped.
+
+**Before**
+
+```php
+class Fixture
+{
+    public function accept()
+    {
+        return $this->something() || $this->somethingElse();
+    }
+}
+```
+
+**After**
+
+```php
+class Fixture
+{
+    public function accept()
+    {
+        if ($this->something()) {
+            return true;
+        }
+        return (bool) $this->somethingElse();
+    }
+}
+```
+
+Parameters: none.
+
+### ScalarValueToConstFetchRector
+
+Replaces configured integer, float, and string literals with global or class constant fetches. Matching uses strict value comparison; unmatched values are unchanged. The mapping applies wherever a matching literal occurs, so identical literals in unrelated contexts are also replaced.
+
+**Before**
+
+```php
+$limit = 10;
+```
+
+**After**
+
+```php
+$limit = \App\ClassWithConst::FOOBAR_INT;
+```
+
+Parameters:
+
+- Scalar mappings (`list<ScalarValueToConstFetch>`, required) — each value object pairs a PHP-Parser scalar node with a `ConstFetch` or `ClassConstFetch` node. The example maps the integer `10` to `App\ClassWithConst::FOOBAR_INT`.
+
+```php
+use PhpParser\Node\Expr\ClassConstFetch;
+use PhpParser\Node\Identifier;
+use PhpParser\Node\Name\FullyQualified;
+use PhpParser\Node\Scalar\Int_;
+use Rector\Config\RectorConfig;
+use Rector\Transform\ValueObject\ScalarValueToConstFetch;
+use Vix\RectorRules\LegacyRector\ScalarValueToConstFetchRector;
+
+return RectorConfig::configure()
+    ->withConfiguredRule(ScalarValueToConstFetchRector::class, [
+        new ScalarValueToConstFetch(
+            new Int_(10),
+            new ClassConstFetch(new FullyQualified(App\ClassWithConst::class), new Identifier('FOOBAR_INT')),
+        ),
+    ]);
+```
+
+### SequentialAssignmentsToPipeOperatorRector
+
+Collapses supported consecutive single-argument function-call assignments into a PHP 8.5 pipe chain. Each call must consume the previous assigned variable. The final variable receives the chain result, and intermediate assignments disappear; single calls and unsupported assignment shapes are skipped.
+
+**Before**
+
+```php
+$value = "hello world";
+$result1 = function3($value);
+$result2 = function2($result1);
+$result = function1($result2);
+```
+
+**After**
+
+```php
+$value = "hello world";
+$result = $value
+    |> function3(...)
+    |> function2(...)
+    |> function1(...);
+```
+
+Parameters: none.
+
+### ShortenElseIfRector
+
+Rewrites an `else` block containing only one `if` into `elseif`, preserving supported comments and nested branches. Blocks with additional statements, alternative syntax, or embedded HTML are left unchanged.
+
+**Before**
+
+```php
+if ($first) {
+    process();
+} else {
+    if ($second) {
+        process();
+    }
+}
+```
+
+**After**
+
+```php
+if ($first) {
+    process();
+} elseif ($second) {
+    process();
+}
+```
+
+Parameters: none.
+
+### SimplifyIfElseToTernaryRector
+
+Replaces an `if`/`else` whose branches each assign to the same target with one ternary assignment. It skips `elseif` branches, nested ternaries, overly long output, and branches whose comments cannot be preserved.
+
+**Before**
+
+```php
+class Fixture
+{
+    public function run()
+    {
+        if (empty($value)) {
+            $this->arrayBuilt[][$key] = true;
+        } else {
+            $this->arrayBuilt[][$key] = $value;
+        }
+    }
+}
+```
+
+**After**
+
+```php
+class Fixture
+{
+    public function run()
+    {
+        $this->arrayBuilt[][$key] = empty($value) ? true : $value;
+    }
+}
+```
+
+Parameters: none.
+
+### SwitchNegatedTernaryRector
+
+Removes a leading negation from a long ternary condition and swaps the two result branches. Short ternaries and conditions without the supported negation are left unchanged.
+
+**Before**
+
+```php
+class Fixture
+{
+    public function run(bool $upper, string $name)
+    {
+        return ! $upper
+            ? $name
+            : strtoupper($name);
+    }
+}
+```
+
+**After**
+
+```php
+class Fixture
+{
+    public function run(bool $upper, string $name)
+    {
+        return $upper
+            ? strtoupper($name)
+            : $name;
     }
 }
 ```
