@@ -30,7 +30,6 @@ Each configurable rule documents its parameters in its section.
     - [NestedFuncCallsToPipeOperatorRector](#nestedfunccallstopipeoperatorrector)
     - [NestedTernaryToMatchRector](#nestedternarytomatchrector)
     - [NewInInitializerRector](#newininitializerrector)
-    - [PropertyHookRector](#propertyhookrector)
     - [RemoveAnnotationRector](#removeannotationrector)
     - [RemoveNamedArgsInDataProviderRector](#removenamedargsindataproviderrector)
     - [RenameDeprecatedMethodCallRector](#renamedeprecatedmethodcallrector)
@@ -802,45 +801,6 @@ class SomeClass
 {
     public function __construct(private ?Logger $logger = new NullLogger)
     {
-    }
-}
-```
-
-Parameters: none.
-
-### PropertyHookRector
-
-Replaces supported single-statement getters and setters with public property hooks in final classes. Readonly properties or classes, magic accessors, attributed methods, and inherited method contracts are skipped. Requires PHP 8.4 or newer. Getter/setter methods are removed; their callers need property access.
-
-**Before**
-
-```php
-final class SomeFixture
-{
-    private string $name;
-
-    public function getName(): string
-    {
-        return $this->name;
-    }
-
-    public function setName(string $name): void
-    {
-        $this->name = ucfirst($name);
-    }
-}
-```
-
-**After**
-
-```php
-final class SomeFixture
-{
-    public string $name {
-        get => $this->name;
-        set(string $name) {
-            $this->name = ucfirst($name);
-        }
     }
 }
 ```
