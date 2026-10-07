@@ -12,7 +12,6 @@ Each configurable rule documents its parameters in its section.
   - [CollapseSequentialStrReplaceRector](#collapsesequentialstrreplacerector)
   - [ExtractAssignmentFromIfConditionRector](#extractassignmentfromifconditionrector)
   - [Legacy Rector](#legacy-rector)
-    - [AddInterfaceByTraitRector](#addinterfacebytraitrector)
     - [AddParamArrayDocblockBasedOnArrayMapRector](#addparamarraydocblockbasedonarraymaprector)
     - [AddReturnArrayDocblockBasedOnArrayMapRector](#addreturnarraydocblockbasedonarraymaprector)
     - [AddReturnDocblockForDimFetchArrayFromAssignsRector](#addreturndocblockfordimfetcharrayfromassignsrector)
@@ -148,46 +147,6 @@ Parameters: none.
 ## Legacy Rector
 
 All rules below use the `Vix\RectorRules\LegacyRector` namespace. Register the restored rules individually in your Rector configuration.
-
-### AddInterfaceByTraitRector
-
-Adds a configured interface to a class that uses a matching trait. Classes already implementing the interface, including through an inherited interface, are left unchanged.
-
-**Before**
-
-```php
-use App\SomeTrait;
-
-class SomeClass
-{
-    use SomeTrait;
-}
-```
-
-**After**
-
-```php
-use App\SomeTrait;
-
-class SomeClass implements \App\SomeInterface
-{
-    use SomeTrait;
-}
-```
-
-Parameters:
-
-- Trait-to-interface mappings (`array<class-string, class-string>`, default: `[]`) — each trait class name maps to the interface to add.
-
-```php
-use Rector\Config\RectorConfig;
-use Vix\RectorRules\LegacyRector\AddInterfaceByTraitRector;
-
-return RectorConfig::configure()
-    ->withConfiguredRule(AddInterfaceByTraitRector::class, [
-        App\SomeTrait::class => App\SomeInterface::class,
-    ]);
-```
 
 ### AddParamArrayDocblockBasedOnArrayMapRector
 
