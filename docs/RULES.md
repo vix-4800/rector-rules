@@ -20,7 +20,6 @@ Each configurable rule documents its parameters in its section.
     - [ChangeNestedIfsToEarlyReturnRector](#changenestedifstoearlyreturnrector)
     - [ChangeOrIfContinueToMultiContinueRector](#changeorifcontinuetomulticontinuerector)
     - [CombineIfRector](#combineifrector)
-    - [ConfiguredMockEntityToSetterObjectRector](#configuredmockentitytosetterobjectrector)
     - [ConstAndTraitDeprecatedAttributeRector](#constandtraitdeprecatedattributerector)
     - [CountArrayToEmptyArrayComparisonRector](#countarraytoemptyarraycomparisonrector)
     - [DeprecatedAnnotationToDeprecatedAttributeRector](#deprecatedannotationtodeprecatedattributerector)
@@ -465,43 +464,6 @@ class Fixture
         if ($cond1 && $cond2) {
             return 'foo';
         }
-    }
-}
-```
-
-Parameters: none.
-
-### ConfiguredMockEntityToSetterObjectRector
-
-Replaces `createConfiguredMock()` for a concrete Doctrine entity or document inside a PHPUnit test class with a real instance and setter calls derived from configured getters. It also handles a directly returned mock. Keys without a `get` prefix are omitted, and setter existence is not checked; the generated code executes the real constructor and setters.
-
-**Before**
-
-```php
-use App\SomeEntityToBeConfigured;
-
-final class SomeTest extends \PHPUnit\Framework\TestCase
-{
-    public function test()
-    {
-        $mockObject = $this->createConfiguredMock(SomeEntityToBeConfigured::class, [
-            'getName' => 'John',
-        ]);
-    }
-}
-```
-
-**After**
-
-```php
-use App\SomeEntityToBeConfigured;
-
-final class SomeTest extends \PHPUnit\Framework\TestCase
-{
-    public function test()
-    {
-        $mockObject = new \App\SomeEntityToBeConfigured();
-        $mockObject->setName('John');
     }
 }
 ```
