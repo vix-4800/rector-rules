@@ -26,7 +26,6 @@ Each configurable rule documents its parameters in its section.
     - [DisallowedEmptyRuleFixerRector](#disallowedemptyrulefixerrector)
     - [ExplicitBoolCompareRector](#explicitboolcomparerector)
     - [FluentSettersToStandaloneCallMethodRector](#fluentsetterstostandalonecallmethodrector)
-    - [FuncCallToMethodCallRector](#funccalltomethodcallrector)
     - [JsonThrowOnErrorRector](#jsonthrowonerrorrector)
     - [NestedFuncCallsToPipeOperatorRector](#nestedfunccallstopipeoperatorrector)
     - [NestedTernaryToMatchRector](#nestedternarytomatchrector)
@@ -687,52 +686,6 @@ final class SomeClass
 
 Parameters: none.
 
-### FuncCallToMethodCallRector
-
-Replaces configured function calls inside instance methods with calls to a service method. It reuses a matching dependency or adds one through constructor injection. Static and abstract methods are skipped.
-
-**Before**
-
-```php
-final class Fixture
-{
-    public function run()
-    {
-        $result = \translate('name');
-    }
-}
-```
-
-**After**
-
-```php
-final class Fixture
-{
-    public function __construct(private \App\SomeTranslator $someTranslator)
-    {
-    }
-
-    public function run()
-    {
-        $result = $this->someTranslator->translateMethod('name');
-    }
-}
-```
-
-Parameters:
-
-- Function mappings (`list<FuncCallToMethodCall>`, default: `[]`) — each value object specifies the old function name, the service class, and the new method name. The example maps `translate()` to `App\SomeTranslator::translateMethod()`.
-
-```php
-use Rector\Config\RectorConfig;
-use Rector\Transform\ValueObject\FuncCallToMethodCall;
-use Vix\RectorRules\LegacyRector\FuncCallToMethodCallRector;
-
-return RectorConfig::configure()
-    ->withConfiguredRule(FuncCallToMethodCallRector::class, [
-        new FuncCallToMethodCall('translate', App\SomeTranslator::class, 'translateMethod'),
-    ]);
-```
 
 ### JsonThrowOnErrorRector
 
