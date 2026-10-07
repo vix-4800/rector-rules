@@ -19,7 +19,6 @@ Each configurable rule documents its parameters in its section.
     - [ChangeNestedForeachIfsToEarlyContinueRector](#changenestedforeachifstoearlycontinuerector)
     - [ChangeNestedIfsToEarlyReturnRector](#changenestedifstoearlyreturnrector)
     - [ChangeOrIfContinueToMultiContinueRector](#changeorifcontinuetomulticontinuerector)
-    - [CoalesceToTernaryRector](#coalescetoternaryrector)
     - [CombineIfRector](#combineifrector)
     - [ConfiguredMockEntityToSetterObjectRector](#configuredmockentitytosetterobjectrector)
     - [ConstAndTraitDeprecatedAttributeRector](#constandtraitdeprecatedattributerector)
@@ -430,36 +429,6 @@ class Fixture
             $car->setWheel($newCar->wheel);
             $car->setFuel($newCar->fuel);
         }
-    }
-}
-```
-
-Parameters: none.
-
-### CoalesceToTernaryRector
-
-Replaces `??` with the short ternary `?:` when the left operand has a native non-nullable type. Array offsets, nullable or mixed types, and undefined variables are skipped. This changes the result for falsy values such as an empty string or `0`, which select the fallback after conversion.
-
-**Before**
-
-```php
-class NonNullableLeft
-{
-    public function run(string $name)
-    {
-        return $name ?? 'tom';
-    }
-}
-```
-
-**After**
-
-```php
-class NonNullableLeft
-{
-    public function run(string $name)
-    {
-        return $name ?: 'tom';
     }
 }
 ```
