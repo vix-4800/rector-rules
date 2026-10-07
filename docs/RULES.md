@@ -12,7 +12,6 @@ Each configurable rule documents its parameters in its section.
   - [CollapseSequentialStrReplaceRector](#collapsesequentialstrreplacerector)
   - [ExtractAssignmentFromIfConditionRector](#extractassignmentfromifconditionrector)
   - [Legacy Rector](#legacy-rector)
-    - [AddAssertArrayFromClassMethodDocblockRector](#addassertarrayfromclassmethoddocblockrector)
     - [AddInterfaceByTraitRector](#addinterfacebytraitrector)
     - [AddParamArrayDocblockBasedOnArrayMapRector](#addparamarraydocblockbasedonarraymaprector)
     - [AddReturnArrayDocblockBasedOnArrayMapRector](#addreturnarraydocblockbasedonarraymaprector)
@@ -149,54 +148,6 @@ Parameters: none.
 ## Legacy Rector
 
 All rules below use the `Vix\RectorRules\LegacyRector` namespace. Register the restored rules individually in your Rector configuration.
-
-### AddAssertArrayFromClassMethodDocblockRector
-
-Adds runtime assertions for array elements and supported key types inferred from class-method `@param` annotations. It supports Webmozart Assert and beberlei/assert, and skips assertions that already exist. The selected assertion library must be available in the code being refactored.
-
-**Before**
-
-```php
-final class SimpleArray
-{
-    /**
-     * @param int[] $items
-     */
-    public function run(array $items)
-    {
-    }
-}
-```
-
-**After**
-
-```php
-final class SimpleArray
-{
-    /**
-     * @param int[] $items
-     */
-    public function run(array $items)
-    {
-        \Webmozart\Assert\Assert::allInteger($items);
-    }
-}
-```
-
-Parameters:
-
-- Assertion library (`list<string>`, default: Webmozart Assert) — an empty configuration uses the default. Otherwise supply exactly one of `AssertClassName::WEBMOZART` or `AssertClassName::BEBERLEI`.
-
-```php
-use Rector\Config\RectorConfig;
-use Vix\RectorRules\LegacyRector\AddAssertArrayFromClassMethodDocblockRector;
-use Vix\RectorRules\LegacyRector\Enum\AssertClassName;
-
-return RectorConfig::configure()
-    ->withConfiguredRule(AddAssertArrayFromClassMethodDocblockRector::class, [
-        AssertClassName::BEBERLEI,
-    ]);
-```
 
 ### AddInterfaceByTraitRector
 
