@@ -21,7 +21,7 @@
   "prefer-stable": true,
   "require": {
     "php": "^8.4",
-    "rector/rector": "^2.6"
+    "rector/rector": "^2.7.0"
   },
   "require-dev": {
     "phpstan/phpstan": "^2.3.0",
