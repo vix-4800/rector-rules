@@ -34,7 +34,6 @@ Each configurable rule documents its parameters in its section.
     - [RenameDeprecatedMethodCallRector](#renamedeprecatedmethodcallrector)
     - [ReplaceTestFunctionPrefixWithAttributeRector](#replacetestfunctionprefixwithattributerector)
     - [ReturnBinaryOrToEarlyReturnRector](#returnbinaryortoearlyreturnrector)
-    - [ScalarValueToConstFetchRector](#scalarvaluetoconstfetchrector)
     - [SequentialAssignmentsToPipeOperatorRector](#sequentialassignmentstopipeoperatorrector)
     - [ShortenElseIfRector](#shortenelseifrector)
     - [SimplifyIfElseToTernaryRector](#simplifyifelsetoternaryrector)
@@ -936,44 +935,6 @@ class Fixture
 ```
 
 Parameters: none.
-
-### ScalarValueToConstFetchRector
-
-Replaces configured integer, float, and string literals with global or class constant fetches. Matching uses strict value comparison; unmatched values are unchanged. The mapping applies wherever a matching literal occurs, so identical literals in unrelated contexts are also replaced.
-
-**Before**
-
-```php
-$limit = 10;
-```
-
-**After**
-
-```php
-$limit = \App\ClassWithConst::FOOBAR_INT;
-```
-
-Parameters:
-
-- Scalar mappings (`list<ScalarValueToConstFetch>`, required) — each value object pairs a PHP-Parser scalar node with a `ConstFetch` or `ClassConstFetch` node. The example maps the integer `10` to `App\ClassWithConst::FOOBAR_INT`.
-
-```php
-use PhpParser\Node\Expr\ClassConstFetch;
-use PhpParser\Node\Identifier;
-use PhpParser\Node\Name\FullyQualified;
-use PhpParser\Node\Scalar\Int_;
-use Rector\Config\RectorConfig;
-use Rector\Transform\ValueObject\ScalarValueToConstFetch;
-use Vix\RectorRules\LegacyRector\ScalarValueToConstFetchRector;
-
-return RectorConfig::configure()
-    ->withConfiguredRule(ScalarValueToConstFetchRector::class, [
-        new ScalarValueToConstFetch(
-            new Int_(10),
-            new ClassConstFetch(new FullyQualified(App\ClassWithConst::class), new Identifier('FOOBAR_INT')),
-        ),
-    ]);
-```
 
 ### SequentialAssignmentsToPipeOperatorRector
 
