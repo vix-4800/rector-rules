@@ -30,7 +30,6 @@ Each configurable rule documents its parameters in its section.
     - [NestedFuncCallsToPipeOperatorRector](#nestedfunccallstopipeoperatorrector)
     - [NestedTernaryToMatchRector](#nestedternarytomatchrector)
     - [NewInInitializerRector](#newininitializerrector)
-    - [RemoveAnnotationRector](#removeannotationrector)
     - [RemoveNamedArgsInDataProviderRector](#removenamedargsindataproviderrector)
     - [RenameDeprecatedMethodCallRector](#renamedeprecatedmethodcallrector)
     - [ReplaceTestFunctionPrefixWithAttributeRector](#replacetestfunctionprefixwithattributerector)
@@ -685,7 +684,6 @@ final class SomeClass
 
 Parameters: none.
 
-
 ### JsonThrowOnErrorRector
 
 Adds `JSON_THROW_ON_ERROR` to supported `json_encode()` and `json_decode()` calls, combining it with existing constant flags and supplying missing decode defaults. Calls using named arguments, first-class callables, or statically resolved string/array inputs are skipped, as are enclosing statements containing `json_last_error()` or `json_last_error_msg()`. Errors then throw `JsonException` instead of returning `false` or `null`.
@@ -806,41 +804,6 @@ class SomeClass
 ```
 
 Parameters: none.
-
-### RemoveAnnotationRector
-
-Removes configured PHPDoc tags from classes, functions, methods, properties, and class constants. It accepts tag names, resolved annotation names, or PHPDoc tag-value classes, and preserves unrelated tags.
-
-**Before**
-
-```php
-/**
- * @method getName()
- */
-final class Fixture
-{
-}
-```
-
-**After**
-
-```php
-final class Fixture
-{
-}
-```
-
-Parameters:
-
-- Annotation names (`list<string>`, required) — at least one tag or annotation name to remove. The example removes `@method` tags.
-
-```php
-use Rector\Config\RectorConfig;
-use Vix\RectorRules\LegacyRector\RemoveAnnotationRector;
-
-return RectorConfig::configure()
-    ->withConfiguredRule(RemoveAnnotationRector::class, ['method']);
-```
 
 ### RemoveNamedArgsInDataProviderRector
 
